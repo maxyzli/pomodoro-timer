@@ -75,6 +75,80 @@ const NavTab = styled.div<{ active?: boolean }>`
   height: 40px;
 `;
 
+// Styled-components for timer page
+const TimerContainer = styled.div`
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  margin-top: 32px;
+`;
+
+const ModeTabs = styled.div`
+  display: flex;
+  justify-content: center;
+  margin-bottom: 32px;
+  gap: 16px;
+`;
+
+const ModeTab = styled.button<{ active?: boolean }>`
+  font-size: 1.2rem;
+  font-weight: 700;
+  letter-spacing: 1px;
+  padding: 10px 32px;
+  border-radius: 24px;
+  background: ${({ active }) => (active ? '#fff' : 'transparent')};
+  color: ${({ active }) => (active ? '#b04a4a' : '#fff')};
+  border: 2px solid #fff;
+  transition: background 0.2s, color 0.2s;
+  box-shadow: ${({ active }) => (active ? '0 2px 8px rgba(0,0,0,0.10)' : 'none')};
+  cursor: pointer;
+  outline: none;
+  margin: 0 4px;
+  &:disabled {
+    opacity: 0.6;
+    cursor: not-allowed;
+  }
+`;
+
+const TimerDisplay = styled.div`
+  text-align: center;
+  margin-bottom: 24px;
+`;
+
+const TimeText = styled.div`
+  font-size: 6rem;
+  font-weight: 900;
+  color: #fff;
+  margin-bottom: 16px;
+  text-shadow: 0 2px 8px rgba(0,0,0,0.10);
+  white-space: nowrap;
+  line-height: 1;
+`;
+
+const StartButton = styled.button`
+  background: #fff;
+  color: #b04a4a;
+  border: none;
+  font-size: 2rem;
+  font-weight: 900;
+  border-radius: 12px;
+  box-shadow: 0 2px 8px rgba(0,0,0,0.10);
+  transition: background 0.2s;
+  width: 240px;
+  height: 72px;
+  margin: 32px 0 24px 0;
+  letter-spacing: 2px;
+  cursor: pointer;
+  &:hover, &:focus {
+    background: #ffeaea;
+    color: #b04a4a;
+  }
+  &:disabled {
+    opacity: 0.6;
+    cursor: not-allowed;
+  }
+`;
+
 const App: React.FC = () => {
   const [currentPage, setCurrentPage] = useState<Page>('timer');
   const [showFocusModal, setShowFocusModal] = useState(false);
@@ -268,98 +342,46 @@ const App: React.FC = () => {
   };
 
   const renderTimerPage = () => (
-    <div className="timer-card">
-      {/* Mode Selector - now above timer */}
-      <div className="mode-selector mode-tabs">
-        <Space size="middle">
-          <Button
-            type={state.currentMode === 'work' ? 'primary' : 'default'}
-            size="large"
-            className="mode-tab"
-            onClick={() => handleModeSwitch('work')}
-            disabled={state.isRunning}
-          >
-            Pomodoro
+    <TimerContainer>
+      <ModeTabs>
+        <ModeTab
+          active={state.currentMode === 'work'}
+          onClick={() => handleModeSwitch('work')}
+          disabled={state.isRunning}
+        >
+          Pomodoro
+        </ModeTab>
+        <ModeTab
+          active={state.currentMode === 'short-break'}
+          onClick={() => handleModeSwitch('short-break')}
+          disabled={state.isRunning}
+        >
+          Short Break
+        </ModeTab>
+        <ModeTab
+          active={state.currentMode === 'long-break'}
+          onClick={() => handleModeSwitch('long-break')}
+          disabled={state.isRunning}
+        >
+          Long Break
+        </ModeTab>
+      </ModeTabs>
+      <TimerDisplay>
+        <TimeText>{formatTime(state.timeLeft)}</TimeText>
+      </TimerDisplay>
+      {!state.isRunning ? (
+        <StartButton onClick={handleStartClick}>START</StartButton>
+      ) : (
+        <Space size="large" style={{ margin: '32px 0 24px 0' }}>
+          <Button size="large" icon={<PauseCircleOutlined />} onClick={pauseTimer}>
+            Pause
           </Button>
-          <Button
-            type={state.currentMode === 'short-break' ? 'primary' : 'default'}
-            size="large"
-            className="mode-tab"
-            onClick={() => handleModeSwitch('short-break')}
-            disabled={state.isRunning}
-          >
-            Short Break
-          </Button>
-          <Button
-            type={state.currentMode === 'long-break' ? 'primary' : 'default'}
-            size="large"
-            className="mode-tab"
-            onClick={() => handleModeSwitch('long-break')}
-            disabled={state.isRunning}
-          >
-            Long Break
+          <Button size="large" icon={<ReloadOutlined />} onClick={handleTimerReset}>
+            Reset
           </Button>
         </Space>
-      </div>
-
-      {/* Timer Display */}
-      <div className="timer-display">
-        <Title level={1} className="time-display focus-style">
-          {formatTime(state.timeLeft)}
-        </Title>
-      </div>
-
-      {/* Current Focus Task - Only show during work sessions */}
-      {currentFocusTask && state.currentMode === 'work' && (
-        <Card 
-          size="small" 
-          className="focus-task-card"
-          style={{ marginBottom: 24, background: 'linear-gradient(135deg, #667eea 0%, #764ba2 100%)' }}
-        >
-          <Text strong style={{ color: 'white', display: 'block', marginBottom: 8 }}>
-            Current Focus:
-          </Text>
-          <Text style={{ color: 'white', fontSize: '16px' }}>
-            {currentFocusTask}
-          </Text>
-        </Card>
       )}
-
-      {/* Controls - show only START if not running, else show Pause/Reset */}
-      <div className="controls" style={{ textAlign: 'center', marginBottom: 24 }}>
-        {!state.isRunning ? (
-          <Button
-            type="primary"
-            size="large"
-            className="start-btn"
-            style={{ fontSize: 28, height: 64, width: 200, fontWeight: 700, letterSpacing: 2 }}
-            onClick={handleStartClick}
-          >
-            START
-          </Button>
-        ) : (
-          <Space size="large">
-            <Button
-              size="large"
-              icon={<PauseCircleOutlined />}
-              onClick={pauseTimer}
-            >
-              Pause
-            </Button>
-            <Button
-              size="large"
-              icon={<ReloadOutlined />}
-              onClick={handleTimerReset}
-            >
-              Reset
-            </Button>
-          </Space>
-        )}
-      </div>
-
       <Divider />
-
-      {/* Session Tracker */}
       <div className="session-tracker">
         <Title level={4}>Session Progress</Title>
         <Text>
@@ -372,7 +394,7 @@ const App: React.FC = () => {
           style={{ marginTop: 16 }}
         />
       </div>
-    </div>
+    </TimerContainer>
   );
 
   const renderSettingsPage = () => (
