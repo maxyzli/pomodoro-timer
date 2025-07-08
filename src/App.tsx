@@ -1,6 +1,6 @@
 import React, { useEffect, useState } from 'react';
 import { Layout, Typography, Card, Space, Divider, Button, Tag, Progress, Row, Col, Modal, Input, List, Popconfirm, Checkbox, Tooltip, Menu } from 'antd';
-import { PlayCircleOutlined, PauseCircleOutlined, ReloadOutlined, SettingOutlined, DeleteOutlined, BarChartOutlined, PlusOutlined, MenuFoldOutlined, MenuUnfoldOutlined, UnorderedListOutlined, ClockCircleOutlined } from '@ant-design/icons';
+import { PlayCircleOutlined, PauseCircleOutlined, ReloadOutlined, SettingOutlined, DeleteOutlined, BarChartOutlined, PlusOutlined, MenuFoldOutlined, MenuUnfoldOutlined, UnorderedListOutlined, ClockCircleOutlined, DownloadOutlined } from '@ant-design/icons';
 import { useTimer } from './hooks/useTimer';
 import { FocusModal } from './components/FocusModal';
 import { SettingsPage } from './components/SettingsPage';
@@ -357,6 +357,18 @@ const App: React.FC = () => {
     setArtifacts(prev => prev.filter((_, i) => i !== idx));
   };
 
+  const handleDownloadStats = () => {
+    const dataStr = JSON.stringify(artifacts, null, 2);
+    const dataUri = 'data:application/json;charset=utf-8,'+ encodeURIComponent(dataStr);
+    
+    const exportFileDefaultName = `pomodoro-stats-${new Date().toISOString().split('T')[0]}.json`;
+    
+    const linkElement = document.createElement('a');
+    linkElement.setAttribute('href', dataUri);
+    linkElement.setAttribute('download', exportFileDefaultName);
+    linkElement.click();
+  };
+
   const renderTimerPage = () => (
     <TimerContainer>
       <ModeTabs>
@@ -503,8 +515,18 @@ const App: React.FC = () => {
           {currentPage === 'stats' && (
             <div style={{ width: '600px', maxWidth: '90%', margin: '40px auto', background: 'rgba(255,255,255,0.04)', borderRadius: 16, padding: '32px 24px' }}>
               <div style={{ fontWeight: 700, fontSize: 24, marginBottom: 16 }}>Pomodoro Progress</div>
-              <div style={{ marginBottom: 16 }}>
-                <strong>Total Pomodoros completed:</strong> {artifacts.length}
+              <div style={{ marginBottom: 16, display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
+                <div>
+                  <strong>Total Pomodoros completed:</strong> {artifacts.length}
+                </div>
+                <Button 
+                  type="primary" 
+                  icon={<DownloadOutlined />} 
+                  onClick={handleDownloadStats}
+                  disabled={artifacts.length === 0}
+                >
+                  Download Stats
+                </Button>
               </div>
               <List
                 dataSource={artifacts}
