@@ -519,7 +519,7 @@ const App: React.FC = () => {
             </div>
           )}
           {currentPage === 'stats' && (
-            <div style={{ width: '600px', maxWidth: '90%', margin: '40px auto', background: 'rgba(255,255,255,0.04)', borderRadius: 16, padding: '32px 24px' }}>
+            <div style={{ width: '600px', maxWidth: '90%', margin: '40px auto', background: 'rgba(255,255,255,0.95)', borderRadius: 16, padding: '32px 24px', boxShadow: '0 8px 32px rgba(0,0,0,0.1)' }}>
               <div style={{ fontWeight: 700, fontSize: 24, marginBottom: 16 }}>Pomodoro Progress</div>
               <div style={{ marginBottom: 16, display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
                 <div>
@@ -550,11 +550,11 @@ const App: React.FC = () => {
                     ]}
                   >
                     <div>
-                      <strong>Session {item.session}</strong> <span style={{ color: '#aaa', fontSize: 12 }}>({item.timestamp})</span>
-                      <div style={{ marginTop: 8, color: '#444', fontWeight: 500 }}>Task:</div>
-                      <div style={{ marginLeft: 16, color: '#222', marginBottom: 8 }}>{item.task ? item.task : <span style={{ color: '#888' }}>—</span>}</div>
-                      <div style={{ color: '#444', fontWeight: 500 }}>Artifact:</div>
-                      <div style={{ marginLeft: 16, color: '#222' }}>{item.text}</div>
+                      <strong>Session {item.session}</strong> <span style={{ color: '#666', fontSize: 12 }}>({item.timestamp})</span>
+                      <div style={{ marginTop: 8, color: '#333', fontWeight: 500 }}>Task:</div>
+                      <div style={{ marginLeft: 16, color: '#111', marginBottom: 8 }}>{item.task ? item.task : <span style={{ color: '#666' }}>—</span>}</div>
+                      <div style={{ color: '#333', fontWeight: 500 }}>Artifact:</div>
+                      <div style={{ marginLeft: 16, color: '#111' }}>{item.text}</div>
                     </div>
                   </List.Item>
                 )}
