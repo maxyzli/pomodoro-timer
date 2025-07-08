@@ -128,108 +128,108 @@ const App: React.FC = () => {
   const progressPercentage = ((getTotalTimeForMode(state.currentMode) - state.timeLeft) / getTotalTimeForMode(state.currentMode)) * 100;
 
   const renderTimerPage = () => (
-    <Content className="app-content">
-      <Row justify="center">
-        <Col xs={24} sm={20} md={16} lg={12}>
-          <Card className="timer-card">
-            {/* Timer Display */}
-            <div className="timer-display">
-              <Title level={1} className="time-display">
-                {formatTime(state.timeLeft)}
-              </Title>
-              <Tag color={getModeColor(state.currentMode)}>
-                {getModeText(state.currentMode)}
-              </Tag>
-            </div>
+    <div className="timer-card">
+      {/* Mode Selector - now above timer */}
+      <div className="mode-selector mode-tabs">
+        <Space size="middle">
+          <Button
+            type={state.currentMode === 'work' ? 'primary' : 'default'}
+            size="large"
+            className="mode-tab"
+            onClick={() => handleModeSwitch('work')}
+          >
+            Pomodoro
+          </Button>
+          <Button
+            type={state.currentMode === 'short-break' ? 'primary' : 'default'}
+            size="large"
+            className="mode-tab"
+            onClick={() => handleModeSwitch('short-break')}
+          >
+            Short Break
+          </Button>
+          <Button
+            type={state.currentMode === 'long-break' ? 'primary' : 'default'}
+            size="large"
+            className="mode-tab"
+            onClick={() => handleModeSwitch('long-break')}
+          >
+            Long Break
+          </Button>
+        </Space>
+      </div>
 
-            {/* Current Focus Task - Only show during work sessions */}
-            {currentFocusTask && state.currentMode === 'work' && (
-              <Card 
-                size="small" 
-                className="focus-task-card"
-                style={{ marginBottom: 24, background: 'linear-gradient(135deg, #667eea 0%, #764ba2 100%)' }}
-              >
-                <Text strong style={{ color: 'white', display: 'block', marginBottom: 8 }}>
-                  Current Focus:
-                </Text>
-                <Text style={{ color: 'white', fontSize: '16px' }}>
-                  {currentFocusTask}
-                </Text>
-              </Card>
-            )}
+      {/* Timer Display */}
+      <div className="timer-display">
+        <Title level={1} className="time-display focus-style">
+          {formatTime(state.timeLeft)}
+        </Title>
+      </div>
 
-            {/* Controls */}
-            <Space size="middle" className="controls">
-              <Button
-                type="primary"
-                size="large"
-                icon={<PlayCircleOutlined />}
-                onClick={handleStartClick}
-                disabled={state.isRunning}
-              >
-                {state.isRunning ? 'Running' : state.currentMode === 'work' ? 'Start Work' : 'Start Break'}
-              </Button>
-              <Button
-                size="large"
-                icon={<PauseCircleOutlined />}
-                onClick={pauseTimer}
-                disabled={!state.isRunning}
-              >
-                Pause
-              </Button>
-              <Button
-                size="large"
-                icon={<ReloadOutlined />}
-                onClick={handleTimerReset}
-                disabled={state.isRunning}
-              >
-                Reset
-              </Button>
-            </Space>
+      {/* Current Focus Task - Only show during work sessions */}
+      {currentFocusTask && state.currentMode === 'work' && (
+        <Card 
+          size="small" 
+          className="focus-task-card"
+          style={{ marginBottom: 24, background: 'linear-gradient(135deg, #667eea 0%, #764ba2 100%)' }}
+        >
+          <Text strong style={{ color: 'white', display: 'block', marginBottom: 8 }}>
+            Current Focus:
+          </Text>
+          <Text style={{ color: 'white', fontSize: '16px' }}>
+            {currentFocusTask}
+          </Text>
+        </Card>
+      )}
 
-            {/* Mode Selector */}
-            <div className="mode-selector">
-              <Space size="small">
-                <Button
-                  type={state.currentMode === 'work' ? 'primary' : 'default'}
-                  onClick={() => handleModeSwitch('work')}
-                >
-                  Work
-                </Button>
-                <Button
-                  type={state.currentMode === 'short-break' ? 'primary' : 'default'}
-                  onClick={() => handleModeSwitch('short-break')}
-                >
-                  Short Break
-                </Button>
-                <Button
-                  type={state.currentMode === 'long-break' ? 'primary' : 'default'}
-                  onClick={() => handleModeSwitch('long-break')}
-                >
-                  Long Break
-                </Button>
-              </Space>
-            </div>
+      {/* Controls - show only START if not running, else show Pause/Reset */}
+      <div className="controls" style={{ textAlign: 'center', marginBottom: 24 }}>
+        {!state.isRunning ? (
+          <Button
+            type="primary"
+            size="large"
+            className="start-btn"
+            style={{ fontSize: 28, height: 64, width: 200, fontWeight: 700, letterSpacing: 2 }}
+            onClick={handleStartClick}
+          >
+            START
+          </Button>
+        ) : (
+          <Space size="large">
+            <Button
+              size="large"
+              icon={<PauseCircleOutlined />}
+              onClick={pauseTimer}
+            >
+              Pause
+            </Button>
+            <Button
+              size="large"
+              icon={<ReloadOutlined />}
+              onClick={handleTimerReset}
+            >
+              Reset
+            </Button>
+          </Space>
+        )}
+      </div>
 
-            <Divider />
+      <Divider />
 
-            {/* Session Tracker */}
-            <div className="session-tracker">
-              <Title level={4}>Session Progress</Title>
-              <Text>
-                Completed: {state.completedSessions} / {state.totalSessions} sessions
-              </Text>
-              <Progress
-                percent={progressPercentage}
-                strokeColor={getModeColor(state.currentMode)}
-                showInfo={false}
-                style={{ marginTop: 16 }}
-              />
-            </div>
-          </Card>
-        </Col>
-      </Row>
-    </Content>
+      {/* Session Tracker */}
+      <div className="session-tracker">
+        <Title level={4}>Session Progress</Title>
+        <Text>
+          Completed: {state.completedSessions} / {state.totalSessions} sessions
+        </Text>
+        <Progress
+          percent={progressPercentage}
+          strokeColor={getModeColor(state.currentMode)}
+          showInfo={false}
+          style={{ marginTop: 16 }}
+        />
+      </div>
+    </div>
   );
 
   const renderSettingsPage = () => (
@@ -243,34 +243,39 @@ const App: React.FC = () => {
   );
 
   return (
-    <Layout className="app-layout">
-      <Header className="app-header">
-        <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', width: '100%' }}>
-          <div>
-            <Title level={2} style={{ color: 'white', margin: 0 }}>
-              Pomodoro Timer
-            </Title>
-            <Text style={{ color: 'rgba(255, 255, 255, 0.85)' }}>
-              Stay focused, stay productive
-            </Text>
-          </div>
+    <div className="app-root">
+      <div className="app-header">
+        <div className="header-title-row">
+          <Title level={2} style={{ color: 'white', margin: 0, textAlign: 'center', display: 'inline-block' }}>
+            Pomodoro Timer
+          </Title>
           <Button
             type="text"
             icon={<SettingOutlined />}
             onClick={() => setCurrentPage('settings')}
-            style={{ color: 'white', fontSize: '18px' }}
+            style={{ color: 'white', fontSize: '22px', marginLeft: 12, verticalAlign: 'middle' }}
+            className="header-settings-btn"
           />
         </div>
-      </Header>
-
-      {currentPage === 'timer' ? renderTimerPage() : renderSettingsPage()}
-
-      <FocusModal
-        isOpen={showFocusModal}
-        onClose={handleModalClose}
-        onStart={handleFocusStart}
-      />
-    </Layout>
+        <Text style={{ color: 'rgba(255, 255, 255, 0.85)', display: 'block', textAlign: 'center', marginBottom: 8 }}>
+          Stay focused, stay productive
+        </Text>
+      </div>
+      <div className="timer-main">
+        {currentPage === 'timer' ? renderTimerPage() : (
+          <SettingsPage
+            settings={settings}
+            onSave={handleSettingsSave}
+            onCancel={handleSettingsCancel}
+          />
+        )}
+        <FocusModal
+          isOpen={showFocusModal}
+          onClose={handleModalClose}
+          onStart={handleFocusStart}
+        />
+      </div>
+    </div>
   );
 };
 

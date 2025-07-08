@@ -2,30 +2,63 @@
 @import 'antd/dist/reset.css';
 
 /* Custom styles for the app layout */
-.app-layout {
+.app-root {
   min-height: 100vh;
+  width: 100vw;
+  background: #b04a4a;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
 }
 
 .app-header {
-  background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
-  padding: 0 24px;
-  text-align: center;
+  width: 100%;
+  background: transparent !important;
+  box-shadow: none !important;
+  border: none !important;
+  padding: 32px 0 24px 0;
   display: flex;
   flex-direction: column;
-  justify-content: center;
   align-items: center;
-  height: 120px;
+}
+
+.header-title-row {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 8px;
+  margin-bottom: 4px;
+}
+
+.header-settings-btn {
+  display: flex;
+  align-items: center;
+  height: 100%;
+}
+
+.timer-main {
+  flex: 1;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: flex-start;
+  width: 100%;
 }
 
 .app-content {
-  padding: 24px;
-  background: #f5f5f5;
+  padding: 0;
+  background: transparent;
   min-height: calc(100vh - 120px);
+  display: flex;
+  align-items: center;
+  justify-content: center;
 }
 
 .timer-card {
-  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.1);
-  border-radius: 12px;
+  box-shadow: none;
+  border-radius: 0;
+  background: transparent;
+  border: none;
 }
 
 .timer-display {
@@ -59,6 +92,43 @@
   text-align: center;
 }
 
+.mode-tabs {
+  text-align: center;
+  margin-bottom: 32px;
+}
+
+.mode-tab {
+  font-size: 1.2rem !important;
+  font-weight: 700 !important;
+  letter-spacing: 1px;
+  padding: 10px 32px !important;
+  border-radius: 24px !important;
+}
+
+.time-display.focus-style {
+  font-size: 6rem !important;
+  font-weight: 900 !important;
+  color: #fff !important;
+  margin-bottom: 16px !important;
+  text-shadow: 0 2px 8px rgba(0,0,0,0.10);
+  white-space: nowrap;
+  line-height: 1;
+}
+
+.start-btn {
+  background: #fff !important;
+  color: #b04a4a !important;
+  border: none !important;
+  font-size: 2rem !important;
+  font-weight: 900 !important;
+  border-radius: 12px !important;
+  box-shadow: 0 2px 8px rgba(0,0,0,0.10);
+  transition: background 0.2s;
+}
+.start-btn:hover, .start-btn:focus {
+  background: #ffeaea !important;
+  color: #b04a4a !important;
+}
 
 
 /* Responsive adjustments */
