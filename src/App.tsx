@@ -67,6 +67,15 @@ const App: React.FC = () => {
     updateSettings,
   } = useTimer(handleWorkSessionComplete);
 
+  // Add useEffect to update document.title with timer status
+  useEffect(() => {
+    if (state.isRunning) {
+      document.title = `${formatTime(state.timeLeft)} - ${state.currentMode === 'work' ? 'Pomodoro' : state.currentMode === 'short-break' ? 'Short Break' : 'Long Break'} Timer`;
+    } else {
+      document.title = 'Pomodoro Timer';
+    }
+  }, [state.isRunning, state.timeLeft, state.currentMode]);
+
   const getTotalTimeForMode = (mode: string): number => {
     switch (mode) {
       case 'work':
@@ -207,6 +216,7 @@ const App: React.FC = () => {
             size="large"
             className="mode-tab"
             onClick={() => handleModeSwitch('work')}
+            disabled={state.isRunning}
           >
             Pomodoro
           </Button>
@@ -215,6 +225,7 @@ const App: React.FC = () => {
             size="large"
             className="mode-tab"
             onClick={() => handleModeSwitch('short-break')}
+            disabled={state.isRunning}
           >
             Short Break
           </Button>
@@ -223,6 +234,7 @@ const App: React.FC = () => {
             size="large"
             className="mode-tab"
             onClick={() => handleModeSwitch('long-break')}
+            disabled={state.isRunning}
           >
             Long Break
           </Button>
@@ -418,9 +430,14 @@ const App: React.FC = () => {
               onOk={handleArtifactSave}
               onCancel={handleArtifactCancel}
               okText="Save"
-              cancelText="Skip"
-              okButtonProps={{ disabled: !artifactVisibility }}
+              cancelButtonProps={{ style: { display: 'none' } }}
+              okButtonProps={{ disabled: !artifactVisibility || !artifactInput.trim() }}
             >
+              {currentFocusTask && (
+                <div style={{ marginBottom: 12, fontWeight: 500 }}>
+                  <span style={{ color: '#888' }}>Task:</span> {currentFocusTask}
+                </div>
+              )}
               <p>List your artifact for this session:</p>
               <Input.TextArea
                 value={artifactInput}
