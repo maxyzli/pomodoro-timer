@@ -357,7 +357,14 @@ const App: React.FC = () => {
   };
 
   const handleDownloadStats = () => {
-    const dataStr = JSON.stringify(artifacts, null, 2);
+    const exportData = artifacts.map(item => ({
+      session: item.session,
+      artifact: item.text,
+      timestamp: new Date(item.timestamp).toISOString(),
+      task: item.task || null
+    }));
+    
+    const dataStr = JSON.stringify(exportData, null, 2);
     const dataUri = 'data:application/json;charset=utf-8,'+ encodeURIComponent(dataStr);
     
     const exportFileDefaultName = `pomodoro-stats-${new Date().toISOString().split('T')[0]}.json`;
