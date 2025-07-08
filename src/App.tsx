@@ -149,6 +149,18 @@ const StartButton = styled.button`
   }
 `;
 
+const CurrentTask = styled.div`
+  margin-bottom: 24px;
+  background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+  color: #fff;
+  font-weight: 600;
+  font-size: 1.2rem;
+  border-radius: 12px;
+  padding: 16px 32px;
+  min-width: 320px;
+  text-align: center;
+`;
+
 const App: React.FC = () => {
   const [currentPage, setCurrentPage] = useState<Page>('timer');
   const [showFocusModal, setShowFocusModal] = useState(false);
@@ -369,6 +381,12 @@ const App: React.FC = () => {
       <TimerDisplay>
         <TimeText>{formatTime(state.timeLeft)}</TimeText>
       </TimerDisplay>
+      {currentFocusTask && (
+        <CurrentTask>
+          <span style={{ opacity: 0.8, fontWeight: 400, fontSize: '1rem' }}>Current Task:</span><br />
+          {currentFocusTask}
+        </CurrentTask>
+      )}
       {!state.isRunning ? (
         <StartButton onClick={handleStartClick}>START</StartButton>
       ) : (
@@ -479,7 +497,7 @@ const App: React.FC = () => {
             </div>
           )}
           {currentPage === 'stats' && (
-            <div style={{ maxWidth: 600, margin: '40px auto', background: 'rgba(255,255,255,0.04)', borderRadius: 16, padding: 32 }}>
+            <div style={{ maxWidth: 800, margin: '40px auto', background: 'rgba(255,255,255,0.04)', borderRadius: 16, padding: 32 }}>
               <div style={{ fontWeight: 700, fontSize: 24, marginBottom: 16 }}>Pomodoro Progress</div>
               <div style={{ marginBottom: 16 }}>
                 <strong>Total Pomodoros completed:</strong> {artifacts.length}
