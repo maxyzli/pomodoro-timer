@@ -142,6 +142,26 @@
   color: #b04a4a !important;
 }
 
+.nav-tab {
+  background: transparent !important;
+  color: #fff !important;
+  border-radius: 20px !important;
+  margin: 0 4px !important;
+  padding: 0 18px !important;
+  font-weight: 700 !important;
+  transition: background 0.2s, color 0.2s;
+}
+
+.nav-tab-active {
+  background: #fff !important;
+  color: #b04a4a !important;
+  border-radius: 20px !important;
+  margin: 0 4px !important;
+  padding: 0 18px !important;
+  font-weight: 900 !important;
+  box-shadow: 0 2px 8px rgba(0,0,0,0.10);
+}
+
 
 /* Responsive adjustments */
 @media (max-width: 768px) {

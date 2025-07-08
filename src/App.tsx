@@ -1,6 +1,6 @@
 import React, { useEffect, useState } from 'react';
-import { Layout, Typography, Card, Space, Divider, Button, Tag, Progress, Row, Col, Modal, Input, List, Popconfirm, Checkbox, Tooltip } from 'antd';
-import { PlayCircleOutlined, PauseCircleOutlined, ReloadOutlined, SettingOutlined, DeleteOutlined, BarChartOutlined, PlusOutlined, MenuFoldOutlined, MenuUnfoldOutlined } from '@ant-design/icons';
+import { Layout, Typography, Card, Space, Divider, Button, Tag, Progress, Row, Col, Modal, Input, List, Popconfirm, Checkbox, Tooltip, Menu } from 'antd';
+import { PlayCircleOutlined, PauseCircleOutlined, ReloadOutlined, SettingOutlined, DeleteOutlined, BarChartOutlined, PlusOutlined, MenuFoldOutlined, MenuUnfoldOutlined, UnorderedListOutlined, ClockCircleOutlined } from '@ant-design/icons';
 import { useTimer } from './hooks/useTimer';
 import { FocusModal } from './components/FocusModal';
 import { SettingsPage } from './components/SettingsPage';
@@ -10,10 +10,17 @@ const { Header, Content } = Layout;
 const { Title, Text } = Typography;
 const { Sider } = Layout;
 
-type Page = 'timer' | 'settings';
+type Page = 'timer' | 'settings' | 'todo' | 'stats';
 
 const ARTIFACTS_KEY = 'pomodoroArtifacts';
 const TODOS_KEY = 'pomodoroTodos';
+
+const NAV_ITEMS = [
+  { key: 'timer', icon: <ClockCircleOutlined />, label: 'Timer' },
+  { key: 'todo', icon: <UnorderedListOutlined />, label: 'Todo' },
+  { key: 'stats', icon: <BarChartOutlined />, label: 'Stats' },
+  { key: 'settings', icon: <SettingOutlined />, label: 'Settings' },
+];
 
 const App: React.FC = () => {
   const [currentPage, setCurrentPage] = useState<Page>('timer');
@@ -27,7 +34,7 @@ const App: React.FC = () => {
     return saved ? JSON.parse(saved) : [];
   });
   const [showProgressModal, setShowProgressModal] = useState(false);
-  const [sidebarCollapsed, setSidebarCollapsed] = useState(false);
+  // Remove Sider and sidebarCollapsed state
 
   const [todos, setTodos] = useState<{ text: string; completed: boolean }[]>(() => {
     const saved = localStorage.getItem(TODOS_KEY);
@@ -326,142 +333,78 @@ const App: React.FC = () => {
 
   return (
     <Layout style={{ minHeight: '100vh', background: '#b04a4a' }}>
-      <Sider
-        width={sidebarCollapsed ? 64 : 300}
-        style={{
-          background: '#a03a3a',
-          boxShadow: '2px 0 8px rgba(0,0,0,0.04)',
-          padding: sidebarCollapsed ? '16px 8px' : '32px 16px 16px 16px',
-          zIndex: 2,
-          transition: 'width 0.2s',
-          overflow: 'hidden',
-        }}
-        collapsed={sidebarCollapsed}
-        collapsible
-        trigger={null}
-      >
-        <div style={{ display: 'flex', alignItems: 'center', marginBottom: 16 }}>
-          {!sidebarCollapsed && <span style={{ fontWeight: 700, fontSize: 20 }}>Todo List</span>}
-          <Button
-            type="text"
-            icon={sidebarCollapsed ? <MenuUnfoldOutlined /> : <MenuFoldOutlined />}
-            onClick={() => setSidebarCollapsed(c => !c)}
-            style={{ marginLeft: 'auto', color: '#fff', fontSize: 20 }}
+      {/* Remove Sider and sidebarCollapsed state */}
+      <Layout style={{ background: 'transparent' }}>
+        <div className="app-header" style={{ flexDirection: 'column', alignItems: 'center', display: 'flex', width: '100%' }}>
+          <Title level={2} style={{ color: 'white', margin: 0, textAlign: 'center' }}>
+            Pomodoro Timer
+          </Title>
+          <Text style={{ color: 'rgba(255, 255, 255, 0.85)', display: 'block', textAlign: 'center', marginBottom: 8 }}>
+            Stay focused, stay productive
+          </Text>
+          <Menu
+            mode="horizontal"
+            selectedKeys={[currentPage]}
+            onClick={({ key }) => setCurrentPage(key as Page)}
+            style={{ background: 'transparent', color: 'white', fontWeight: 700, fontSize: 18, borderBottom: 'none', margin: '16px 0 0 0', display: 'flex', justifyContent: 'center', width: '100%' }}
+            items={NAV_ITEMS.map(item => ({
+              ...item,
+              className: currentPage === item.key ? 'nav-tab-active' : 'nav-tab',
+            }))}
           />
         </div>
-        {!sidebarCollapsed && <>
-          <Input.Group compact>
-            <Input
-              style={{ width: 'calc(100% - 40px)' }}
-              value={todoInput}
-              onChange={e => setTodoInput(e.target.value)}
-              onPressEnter={handleAddTodo}
-              placeholder="Add a new todo..."
-            />
-            <Button type="primary" icon={<PlusOutlined />} onClick={handleAddTodo} />
-          </Input.Group>
-          <List
-            dataSource={todos}
-            renderItem={(item, idx) => (
-              <List.Item
-                actions={[
-                  <Popconfirm
-                    title="Delete this todo?"
-                    onConfirm={() => handleDeleteTodo(idx)}
-                    okText="Yes"
-                    cancelText="No"
-                  >
-                    <Button type="text" icon={<DeleteOutlined />} danger size="small" />
-                  </Popconfirm>
-                ]}
-                style={{ paddingLeft: 0, paddingRight: 0 }}
-              >
-                <Checkbox checked={item.completed} onChange={() => handleToggleTodo(idx)}>
-                  <span style={{ textDecoration: item.completed ? 'line-through' : 'none', color: item.completed ? '#aaa' : '#fff' }}>{item.text}</span>
-                </Checkbox>
-              </List.Item>
-            )}
-            style={{ marginTop: 16 }}
-          />
-        </>}
-      </Sider>
-      <Layout style={{ background: 'transparent' }}>
         <Content>
-          <div className="app-header">
-            <div className="header-title-row">
-              <Title level={2} style={{ color: 'white', margin: 0, textAlign: 'center', display: 'inline-block' }}>
-                Pomodoro Timer
-              </Title>
-              <Button
-                type="text"
-                icon={<BarChartOutlined />}
-                onClick={() => setShowProgressModal(true)}
-                style={{ color: 'white', fontSize: '22px', marginLeft: 12, marginRight: 0, verticalAlign: 'middle' }}
-                className="header-progress-btn"
-              />
-              <Button
-                type="text"
-                icon={<SettingOutlined />}
-                onClick={() => setCurrentPage('settings')}
-                style={{ color: 'white', fontSize: '22px', marginLeft: 12, verticalAlign: 'middle' }}
-                className="header-settings-btn"
+          {currentPage === 'timer' && (
+            <div className="timer-main">
+              {renderTimerPage()}
+              <FocusModal
+                isOpen={showFocusModal}
+                onClose={handleModalClose}
+                onStart={handleFocusStart}
               />
             </div>
-            <Text style={{ color: 'rgba(255, 255, 255, 0.85)', display: 'block', textAlign: 'center', marginBottom: 8 }}>
-              Stay focused, stay productive
-            </Text>
-          </div>
-          <div className="timer-main">
-            {currentPage === 'timer' ? renderTimerPage() : (
-              <SettingsPage
-                settings={settings}
-                onSave={handleSettingsSave}
-                onCancel={handleSettingsCancel}
+          )}
+          {currentPage === 'todo' && (
+            <div style={{ maxWidth: 480, margin: '40px auto', background: 'rgba(255,255,255,0.04)', borderRadius: 16, padding: 32 }}>
+              <div style={{ fontWeight: 700, fontSize: 24, marginBottom: 16 }}>Todo List</div>
+              <Input.Group compact>
+                <Input
+                  style={{ width: 'calc(100% - 40px)' }}
+                  value={todoInput}
+                  onChange={e => setTodoInput(e.target.value)}
+                  onPressEnter={handleAddTodo}
+                  placeholder="Add a new todo..."
+                />
+                <Button type="primary" icon={<PlusOutlined />} onClick={handleAddTodo} />
+              </Input.Group>
+              <List
+                dataSource={todos}
+                renderItem={(item, idx) => (
+                  <List.Item
+                    actions={[
+                      <Popconfirm
+                        title="Delete this todo?"
+                        onConfirm={() => handleDeleteTodo(idx)}
+                        okText="Yes"
+                        cancelText="No"
+                      >
+                        <Button type="text" icon={<DeleteOutlined />} danger size="small" />
+                      </Popconfirm>
+                    ]}
+                    style={{ paddingLeft: 0, paddingRight: 0 }}
+                  >
+                    <Checkbox checked={item.completed} onChange={() => handleToggleTodo(idx)}>
+                      <span style={{ textDecoration: item.completed ? 'line-through' : 'none', color: item.completed ? '#aaa' : '#fff' }}>{item.text}</span>
+                    </Checkbox>
+                  </List.Item>
+                )}
+                style={{ marginTop: 16 }}
               />
-            )}
-            <FocusModal
-              isOpen={showFocusModal}
-              onClose={handleModalClose}
-              onStart={handleFocusStart}
-            />
-            <Modal
-              open={showArtifactModal}
-              title={`Congratulations! Session #${state.completedSessions + 1} complete`}
-              onOk={handleArtifactSave}
-              onCancel={handleArtifactCancel}
-              okText="Save"
-              cancelButtonProps={{ style: { display: 'none' } }}
-              okButtonProps={{ disabled: !artifactVisibility || !artifactInput.trim() }}
-            >
-              {currentFocusTask && (
-                <div style={{ marginBottom: 12, fontWeight: 500 }}>
-                  <span style={{ color: '#888' }}>Task:</span> {currentFocusTask}
-                </div>
-              )}
-              <p>List your artifact for this session:</p>
-              <Input.TextArea
-                value={artifactInput}
-                onChange={e => setArtifactInput(e.target.value)}
-                rows={4}
-                placeholder="Describe your accomplishment, code, or notes..."
-                autoFocus
-              />
-              <div style={{ marginTop: 16 }}>
-                <Checkbox
-                  checked={artifactVisibility}
-                  onChange={e => setArtifactVisibility(e.target.checked)}
-                >
-                  I have shared my process in the Slack channel / email.
-                </Checkbox>
-              </div>
-            </Modal>
-            <Modal
-              open={showProgressModal}
-              title="Pomodoro Progress"
-              onCancel={() => setShowProgressModal(false)}
-              footer={null}
-              width={520}
-            >
+            </div>
+          )}
+          {currentPage === 'stats' && (
+            <div style={{ maxWidth: 600, margin: '40px auto', background: 'rgba(255,255,255,0.04)', borderRadius: 16, padding: 32 }}>
+              <div style={{ fontWeight: 700, fontSize: 24, marginBottom: 16 }}>Pomodoro Progress</div>
               <div style={{ marginBottom: 16 }}>
                 <strong>Total Pomodoros completed:</strong> {artifacts.length}
               </div>
@@ -478,8 +421,72 @@ const App: React.FC = () => {
                 )}
                 style={{ width: '100%' }}
               />
-            </Modal>
-          </div>
+            </div>
+          )}
+          {currentPage === 'settings' && (
+            <div style={{ maxWidth: 600, margin: '40px auto', background: 'rgba(255,255,255,0.04)', borderRadius: 16, padding: 32 }}>
+              <SettingsPage
+                settings={settings}
+                onSave={handleSettingsSave}
+                onCancel={handleSettingsCancel}
+              />
+            </div>
+          )}
+          <Modal
+            open={showArtifactModal}
+            title={`Congratulations! Session #${state.completedSessions + 1} complete`}
+            onOk={handleArtifactSave}
+            onCancel={handleArtifactCancel}
+            okText="Save"
+            cancelButtonProps={{ style: { display: 'none' } }}
+            okButtonProps={{ disabled: !artifactVisibility || !artifactInput.trim() }}
+          >
+            {currentFocusTask && (
+              <div style={{ marginBottom: 12, fontWeight: 500 }}>
+                <span style={{ color: '#888' }}>Task:</span> {currentFocusTask}
+              </div>
+            )}
+            <p>List your artifact for this session:</p>
+            <Input.TextArea
+              value={artifactInput}
+              onChange={e => setArtifactInput(e.target.value)}
+              rows={4}
+              placeholder="Describe your accomplishment, code, or notes..."
+              autoFocus
+            />
+            <div style={{ marginTop: 16 }}>
+              <Checkbox
+                checked={artifactVisibility}
+                onChange={e => setArtifactVisibility(e.target.checked)}
+              >
+                I have shared my process in the Slack channel / email.
+              </Checkbox>
+            </div>
+          </Modal>
+          <Modal
+            open={showProgressModal}
+            title="Pomodoro Progress"
+            onCancel={() => setShowProgressModal(false)}
+            footer={null}
+            width={520}
+          >
+            <div style={{ marginBottom: 16 }}>
+              <strong>Total Pomodoros completed:</strong> {artifacts.length}
+            </div>
+            <List
+              dataSource={artifacts}
+              renderItem={item => (
+                <List.Item>
+                  <div>
+                    <strong>Session {item.session}</strong> <span style={{ color: '#888', fontSize: 12 }}>({item.timestamp})</span>
+                    {item.visibility && <span style={{ color: '#389e0d', marginLeft: 8 }}>[Visibility Shared]</span>}
+                    <div>{item.text}</div>
+                  </div>
+                </List.Item>
+              )}
+              style={{ width: '100%' }}
+            />
+          </Modal>
         </Content>
       </Layout>
     </Layout>
