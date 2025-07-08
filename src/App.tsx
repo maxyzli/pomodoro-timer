@@ -353,6 +353,10 @@ const App: React.FC = () => {
     setTodos(prev => prev.filter((_, i) => i !== idx));
   };
 
+  const handleDeleteArtifact = (idx: number) => {
+    setArtifacts(prev => prev.filter((_, i) => i !== idx));
+  };
+
   const renderTimerPage = () => (
     <TimerContainer>
       <ModeTabs>
@@ -504,8 +508,19 @@ const App: React.FC = () => {
               </div>
               <List
                 dataSource={artifacts}
-                renderItem={item => (
-                  <List.Item>
+                renderItem={(item, idx) => (
+                  <List.Item
+                    actions={[
+                      <Popconfirm
+                        title="Delete this Pomodoro session?"
+                        onConfirm={() => handleDeleteArtifact(idx)}
+                        okText="Yes"
+                        cancelText="No"
+                      >
+                        <Button type="text" icon={<DeleteOutlined />} danger size="small" />
+                      </Popconfirm>
+                    ]}
+                  >
                     <div>
                       <strong>Session {item.session}</strong> <span style={{ color: '#aaa', fontSize: 12 }}>({item.timestamp})</span>
                       <div style={{ marginTop: 8, color: '#444', fontWeight: 500 }}>Task:</div>
