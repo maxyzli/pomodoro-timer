@@ -5,7 +5,11 @@ const DEFAULT_SETTINGS: TimerSettings = {
   workTime: 25,
   shortBreakTime: 5,
   longBreakTime: 15,
-  sessionsBeforeLongBreak: 4,
+  longBreakInterval: 4,
+  autoStartBreaks: false,
+  autoStartPomodoros: false,
+  soundEnabled: true,
+  notificationsEnabled: true,
 };
 
 const loadSettings = (): TimerSettings => {
@@ -27,10 +31,10 @@ export const useTimer = () => {
     isRunning: false,
     currentMode: 'work',
     completedSessions: 0,
-    totalSessions: settings.sessionsBeforeLongBreak,
+    totalSessions: settings.longBreakInterval,
   });
 
-  const timerRef = useRef<NodeJS.Timeout | null>(null);
+  const timerRef = useRef<number | null>(null);
 
   const getTimeForMode = useCallback((mode: TimerMode): number => {
     switch (mode) {
@@ -44,6 +48,8 @@ export const useTimer = () => {
   }, [settings]);
 
   const playNotification = useCallback(() => {
+    if (!settings.soundEnabled) return;
+    
     try {
       const audioContext = new (window.AudioContext || (window as any).webkitAudioContext)();
       const oscillator = audioContext.createOscillator();
@@ -64,9 +70,11 @@ export const useTimer = () => {
     } catch (error) {
       console.log('Audio notification failed:', error);
     }
-  }, []);
+  }, [settings.soundEnabled]);
 
   const showNotification = useCallback((mode: TimerMode) => {
+    if (!settings.notificationsEnabled) return;
+    
     if ('Notification' in window && Notification.permission === 'granted') {
       const message = mode === 'work' 
         ? 'Work session completed! Take a break.' 
@@ -77,7 +85,7 @@ export const useTimer = () => {
         icon: 'data:image/svg+xml,<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="%23667eea"><path d="M12 2C6.48 2 2 6.48 2 12s4.48 10 10 10 10-4.48 10-10S17.52 2 12 2zm-2 15l-5-5 1.41-1.41L10 14.17l7.59-7.59L19 8l-9 9z"/></svg>'
       });
     }
-  }, []);
+  }, [settings.notificationsEnabled]);
 
   const completeTimer = useCallback(() => {
     playNotification();
@@ -85,7 +93,7 @@ export const useTimer = () => {
 
     if (state.currentMode === 'work') {
       const newCompletedSessions = state.completedSessions + 1;
-      const shouldTakeLongBreak = newCompletedSessions % settings.sessionsBeforeLongBreak === 0;
+      const shouldTakeLongBreak = newCompletedSessions % settings.longBreakInterval === 0;
       
       setState(prev => ({
         ...prev,
@@ -93,14 +101,28 @@ export const useTimer = () => {
         currentMode: shouldTakeLongBreak ? 'long-break' : 'short-break',
         timeLeft: getTimeForMode(shouldTakeLongBreak ? 'long-break' : 'short-break'),
       }));
+
+      // Auto-start break if enabled
+      if (settings.autoStartBreaks) {
+        setTimeout(() => {
+          setState(prev => ({ ...prev, isRunning: true }));
+        }, 1000);
+      }
     } else {
       setState(prev => ({
         ...prev,
         currentMode: 'work',
         timeLeft: getTimeForMode('work'),
       }));
+
+      // Auto-start pomodoro if enabled
+      if (settings.autoStartPomodoros) {
+        setTimeout(() => {
+          setState(prev => ({ ...prev, isRunning: true }));
+        }, 1000);
+      }
     }
-  }, [state.currentMode, state.completedSessions, settings.sessionsBeforeLongBreak, getTimeForMode, playNotification, showNotification]);
+  }, [state.currentMode, state.completedSessions, settings.longBreakInterval, settings.autoStartBreaks, settings.autoStartPomodoros, getTimeForMode, playNotification, showNotification]);
 
   const startTimer = useCallback(() => {
     if (state.isRunning) return;
@@ -156,7 +178,7 @@ export const useTimer = () => {
     
     setState(prev => ({
       ...prev,
-      totalSessions: updatedSettings.sessionsBeforeLongBreak,
+      totalSessions: updatedSettings.longBreakInterval,
       timeLeft: getTimeForMode(prev.currentMode),
     }));
   }, [settings, getTimeForMode]);

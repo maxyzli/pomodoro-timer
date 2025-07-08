@@ -1,69 +1,106 @@
 import React from 'react';
-import { TimerSettings } from '../types';
+import { Card, Form, InputNumber, Switch, Space, Typography } from 'antd';
+
+const { Title } = Typography;
 
 interface SettingsProps {
-  settings: TimerSettings;
-  onSettingsChange: (newSettings: Partial<TimerSettings>) => void;
+  settings: {
+    workTime: number;
+    shortBreakTime: number;
+    longBreakTime: number;
+    longBreakInterval: number;
+    autoStartBreaks: boolean;
+    autoStartPomodoros: boolean;
+    soundEnabled: boolean;
+    notificationsEnabled: boolean;
+  };
+  onSettingsChange: (settings: any) => void;
 }
 
 export const Settings: React.FC<SettingsProps> = ({
   settings,
   onSettingsChange,
 }) => {
-  const handleInputChange = (key: keyof TimerSettings, value: string) => {
-    const numValue = parseInt(value, 10);
-    if (!isNaN(numValue) && numValue > 0) {
-      onSettingsChange({ [key]: numValue });
-    }
+  const handleChange = (key: string, value: any) => {
+    onSettingsChange({
+      ...settings,
+      [key]: value,
+    });
   };
 
   return (
-    <div className="settings">
-      <h3>Settings</h3>
-      <div className="setting-group">
-        <label htmlFor="work-time">Work Time (minutes):</label>
-        <input
-          type="number"
-          id="work-time"
-          value={settings.workTime}
-          onChange={(e) => handleInputChange('workTime', e.target.value)}
-          min="1"
-          max="60"
-        />
-      </div>
-      <div className="setting-group">
-        <label htmlFor="short-break-time">Short Break (minutes):</label>
-        <input
-          type="number"
-          id="short-break-time"
-          value={settings.shortBreakTime}
-          onChange={(e) => handleInputChange('shortBreakTime', e.target.value)}
-          min="1"
-          max="30"
-        />
-      </div>
-      <div className="setting-group">
-        <label htmlFor="long-break-time">Long Break (minutes):</label>
-        <input
-          type="number"
-          id="long-break-time"
-          value={settings.longBreakTime}
-          onChange={(e) => handleInputChange('longBreakTime', e.target.value)}
-          min="1"
-          max="60"
-        />
-      </div>
-      <div className="setting-group">
-        <label htmlFor="sessions-before-long-break">Sessions before long break:</label>
-        <input
-          type="number"
-          id="sessions-before-long-break"
-          value={settings.sessionsBeforeLongBreak}
-          onChange={(e) => handleInputChange('sessionsBeforeLongBreak', e.target.value)}
-          min="1"
-          max="10"
-        />
-      </div>
-    </div>
+    <Card size="small" style={{ marginTop: 16 }}>
+      <Title level={4} style={{ textAlign: 'center', marginBottom: 16 }}>
+        Timer Settings
+      </Title>
+      
+      <Space direction="vertical" style={{ width: '100%' }} size="large">
+        <div>
+          <Title level={5}>Timer Durations (minutes)</Title>
+          <Space>
+            <Form.Item label="Work Time">
+              <InputNumber
+                min={1}
+                max={120}
+                value={settings.workTime}
+                onChange={(value) => handleChange('workTime', value)}
+              />
+            </Form.Item>
+            <Form.Item label="Short Break">
+              <InputNumber
+                min={1}
+                max={30}
+                value={settings.shortBreakTime}
+                onChange={(value) => handleChange('shortBreakTime', value)}
+              />
+            </Form.Item>
+            <Form.Item label="Long Break">
+              <InputNumber
+                min={1}
+                max={60}
+                value={settings.longBreakTime}
+                onChange={(value) => handleChange('longBreakTime', value)}
+              />
+            </Form.Item>
+          </Space>
+        </div>
+
+        <div>
+          <Title level={5}>Auto-start Settings</Title>
+          <Space direction="vertical" style={{ width: '100%' }}>
+            <Form.Item label="Auto-start breaks">
+              <Switch
+                checked={settings.autoStartBreaks}
+                onChange={(checked) => handleChange('autoStartBreaks', checked)}
+              />
+            </Form.Item>
+            <Form.Item label="Auto-start pomodoros">
+              <Switch
+                checked={settings.autoStartPomodoros}
+                onChange={(checked) => handleChange('autoStartPomodoros', checked)}
+              />
+            </Form.Item>
+          </Space>
+        </div>
+
+        <div>
+          <Title level={5}>Notifications</Title>
+          <Space direction="vertical" style={{ width: '100%' }}>
+            <Form.Item label="Sound notifications">
+              <Switch
+                checked={settings.soundEnabled}
+                onChange={(checked) => handleChange('soundEnabled', checked)}
+              />
+            </Form.Item>
+            <Form.Item label="Browser notifications">
+              <Switch
+                checked={settings.notificationsEnabled}
+                onChange={(checked) => handleChange('notificationsEnabled', checked)}
+              />
+            </Form.Item>
+          </Space>
+        </div>
+      </Space>
+    </Card>
   );
 }; 

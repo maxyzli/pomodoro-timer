@@ -4,7 +4,11 @@ export interface TimerSettings {
   workTime: number;
   shortBreakTime: number;
   longBreakTime: number;
-  sessionsBeforeLongBreak: number;
+  longBreakInterval: number;
+  autoStartBreaks: boolean;
+  autoStartPomodoros: boolean;
+  soundEnabled: boolean;
+  notificationsEnabled: boolean;
 }
 
 export interface TimerState {
