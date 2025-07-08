@@ -103,6 +103,18 @@
   letter-spacing: 1px;
   padding: 10px 32px !important;
   border-radius: 24px !important;
+  background: transparent !important;
+  color: #fff !important;
+  border: 2px solid #fff !important;
+  transition: background 0.2s, color 0.2s;
+}
+
+.mode-tab.ant-btn-primary {
+  background: #fff !important;
+  color: #b04a4a !important;
+  border: 2px solid #fff !important;
+  font-weight: 900 !important;
+  box-shadow: 0 2px 8px rgba(0,0,0,0.10);
 }
 
 .time-display.focus-style {
