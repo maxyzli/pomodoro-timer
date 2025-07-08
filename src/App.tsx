@@ -367,7 +367,6 @@ const App: React.FC = () => {
           )}
           {currentPage === 'todo' && (
             <div style={{ maxWidth: 480, margin: '40px auto', background: 'rgba(255,255,255,0.04)', borderRadius: 16, padding: 32 }}>
-              <div style={{ fontWeight: 700, fontSize: 24, marginBottom: 16 }}>Todo List</div>
               <Input.Group compact>
                 <Input
                   style={{ width: 'calc(100% - 40px)' }}
@@ -415,8 +414,10 @@ const App: React.FC = () => {
                   <List.Item>
                     <div>
                       <strong>Session {item.session}</strong> <span style={{ color: '#aaa', fontSize: 12 }}>({item.timestamp})</span>
-                      <div style={{ marginTop: 4 }}><span style={{ color: '#444', fontWeight: 500 }}>Task:</span> {item.task ? item.task : <span style={{ color: '#888' }}>—</span>}</div>
-                      <div style={{ marginTop: 4 }}><span style={{ color: '#444', fontWeight: 500 }}>Artifact:</span> {item.text}</div>
+                      <div style={{ marginTop: 8, color: '#444', fontWeight: 500 }}>Task:</div>
+                      <div style={{ marginLeft: 16, color: '#222', marginBottom: 8 }}>{item.task ? item.task : <span style={{ color: '#888' }}>—</span>}</div>
+                      <div style={{ color: '#444', fontWeight: 500 }}>Artifact:</div>
+                      <div style={{ marginLeft: 16, color: '#222' }}>{item.text}</div>
                     </div>
                   </List.Item>
                 )}
@@ -426,7 +427,6 @@ const App: React.FC = () => {
           )}
           {currentPage === 'settings' && (
             <div style={{ maxWidth: 800, margin: '24px auto', background: 'rgba(255,255,255,0.04)', borderRadius: 16, padding: 32, textAlign: 'center' }}>
-              <div style={{ fontWeight: 700, fontSize: 32, marginBottom: 24, textAlign: 'center' }}>Timer Settings</div>
               <div style={{ textAlign: 'left' }}>
                 <SettingsPage
                   settings={settings}
