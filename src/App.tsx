@@ -4,7 +4,7 @@ import { PlayCircleOutlined, PauseCircleOutlined, ReloadOutlined, SettingOutline
 import { useTimer } from './hooks/useTimer';
 import { FocusModal } from './components/FocusModal';
 import { SettingsPage } from './components/SettingsPage';
-import './App.css';
+import styled, { createGlobalStyle } from 'styled-components';
 
 const { Header, Content } = Layout;
 const { Title, Text } = Typography;
@@ -21,6 +21,59 @@ const NAV_ITEMS = [
   { key: 'stats', icon: <BarChartOutlined />, label: 'Stats' },
   { key: 'settings', icon: <SettingOutlined />, label: 'Settings' },
 ];
+
+const GlobalStyle = createGlobalStyle`
+  body {
+    font-family: 'Inter', -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+    background: #b04a4a;
+    min-height: 100vh;
+    color: #333;
+  }
+`;
+
+const AppLayout = styled.div`
+  min-height: 100vh;
+  width: 100vw;
+  background: #b04a4a;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+`;
+
+const AppHeader = styled.header`
+  width: 100%;
+  background: transparent;
+  box-shadow: none;
+  border: none;
+  padding: 32px 0 24px 0;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+`;
+
+const NavBar = styled.nav`
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  margin: 16px 0 0 0;
+  width: 100%;
+`;
+
+const NavTab = styled.div<{ active?: boolean }>`
+  background: ${({ active }) => (active ? '#fff' : 'transparent')};
+  color: ${({ active }) => (active ? '#b04a4a' : '#fff')};
+  border-radius: 20px;
+  margin: 0 4px;
+  padding: 0 18px;
+  font-weight: ${({ active }) => (active ? 900 : 700)};
+  box-shadow: ${({ active }) => (active ? '0 2px 8px rgba(0,0,0,0.10)' : 'none')};
+  font-size: 18px;
+  cursor: pointer;
+  transition: background 0.2s, color 0.2s;
+  display: flex;
+  align-items: center;
+  height: 40px;
+`;
 
 const App: React.FC = () => {
   const [currentPage, setCurrentPage] = useState<Page>('timer');
@@ -333,27 +386,28 @@ const App: React.FC = () => {
   );
 
   return (
-    <Layout style={{ minHeight: '100vh', background: '#b04a4a' }}>
-      {/* Remove Sider and sidebarCollapsed state */}
-      <Layout style={{ background: 'transparent' }}>
-        <div className="app-header" style={{ flexDirection: 'column', alignItems: 'center', display: 'flex', width: '100%' }}>
+    <>
+      <GlobalStyle />
+      <AppLayout>
+        <AppHeader>
           <Title level={2} style={{ color: 'white', margin: 0, textAlign: 'center' }}>
             Pomodoro Timer
           </Title>
           <Text style={{ color: 'rgba(255, 255, 255, 0.85)', display: 'block', textAlign: 'center', marginBottom: 8 }}>
             Stay focused, stay productive
           </Text>
-          <Menu
-            mode="horizontal"
-            selectedKeys={[currentPage]}
-            onClick={({ key }) => setCurrentPage(key as Page)}
-            style={{ background: 'transparent', color: 'white', fontWeight: 700, fontSize: 18, borderBottom: 'none', margin: '16px 0 0 0', display: 'flex', justifyContent: 'center', width: '100%' }}
-            items={NAV_ITEMS.map(item => ({
-              ...item,
-              className: currentPage === item.key ? 'nav-tab-active' : 'nav-tab',
-            }))}
-          />
-        </div>
+          <NavBar>
+            {NAV_ITEMS.map(item => (
+              <NavTab
+                key={item.key}
+                active={currentPage === item.key}
+                onClick={() => setCurrentPage(item.key as Page)}
+              >
+                {item.icon} <span style={{ marginLeft: 6 }}>{item.label}</span>
+              </NavTab>
+            ))}
+          </NavBar>
+        </AppHeader>
         <Content>
           {currentPage === 'timer' && (
             <div className="timer-main">
@@ -492,8 +546,8 @@ const App: React.FC = () => {
             />
           </Modal>
         </Content>
-      </Layout>
-    </Layout>
+      </AppLayout>
+    </>
   );
 };
 
