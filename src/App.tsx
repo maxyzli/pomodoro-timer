@@ -1,6 +1,6 @@
 import React, { useEffect, useState } from 'react';
-import { Layout, Typography, Card, Space, Divider, Button, Tag, Progress, Row, Col, Modal, Input, List, Popconfirm, Checkbox } from 'antd';
-import { PlayCircleOutlined, PauseCircleOutlined, ReloadOutlined, SettingOutlined, DeleteOutlined, BarChartOutlined } from '@ant-design/icons';
+import { Layout, Typography, Card, Space, Divider, Button, Tag, Progress, Row, Col, Modal, Input, List, Popconfirm, Checkbox, Tooltip } from 'antd';
+import { PlayCircleOutlined, PauseCircleOutlined, ReloadOutlined, SettingOutlined, DeleteOutlined, BarChartOutlined, PlusOutlined, MenuFoldOutlined, MenuUnfoldOutlined } from '@ant-design/icons';
 import { useTimer } from './hooks/useTimer';
 import { FocusModal } from './components/FocusModal';
 import { SettingsPage } from './components/SettingsPage';
@@ -8,10 +8,12 @@ import './App.css';
 
 const { Header, Content } = Layout;
 const { Title, Text } = Typography;
+const { Sider } = Layout;
 
 type Page = 'timer' | 'settings';
 
 const ARTIFACTS_KEY = 'pomodoroArtifacts';
+const TODOS_KEY = 'pomodoroTodos';
 
 const App: React.FC = () => {
   const [currentPage, setCurrentPage] = useState<Page>('timer');
@@ -25,11 +27,22 @@ const App: React.FC = () => {
     return saved ? JSON.parse(saved) : [];
   });
   const [showProgressModal, setShowProgressModal] = useState(false);
+  const [sidebarCollapsed, setSidebarCollapsed] = useState(false);
+
+  const [todos, setTodos] = useState<{ text: string; completed: boolean }[]>(() => {
+    const saved = localStorage.getItem(TODOS_KEY);
+    return saved ? JSON.parse(saved) : [];
+  });
+  const [todoInput, setTodoInput] = useState('');
 
   // Save artifacts to localStorage whenever they change
   useEffect(() => {
     localStorage.setItem(ARTIFACTS_KEY, JSON.stringify(artifacts));
   }, [artifacts]);
+
+  useEffect(() => {
+    localStorage.setItem(TODOS_KEY, JSON.stringify(todos));
+  }, [todos]);
 
   // Request notification permission on mount
   useEffect(() => {
@@ -169,6 +182,21 @@ const App: React.FC = () => {
 
   const progressPercentage = ((getTotalTimeForMode(state.currentMode) - state.timeLeft) / getTotalTimeForMode(state.currentMode)) * 100;
 
+  const handleAddTodo = () => {
+    if (todoInput.trim()) {
+      setTodos(prev => [{ text: todoInput.trim(), completed: false }, ...prev]);
+      setTodoInput('');
+    }
+  };
+
+  const handleToggleTodo = (idx: number) => {
+    setTodos(prev => prev.map((todo, i) => i === idx ? { ...todo, completed: !todo.completed } : todo));
+  };
+
+  const handleDeleteTodo = (idx: number) => {
+    setTodos(prev => prev.filter((_, i) => i !== idx));
+  };
+
   const renderTimerPage = () => (
     <div className="timer-card">
       {/* Mode Selector - now above timer */}
@@ -285,96 +313,159 @@ const App: React.FC = () => {
   );
 
   return (
-    <div className="app-root">
-      <div className="app-header">
-        <div className="header-title-row">
-          <Title level={2} style={{ color: 'white', margin: 0, textAlign: 'center', display: 'inline-block' }}>
-            Pomodoro Timer
-          </Title>
+    <Layout style={{ minHeight: '100vh', background: '#b04a4a' }}>
+      <Sider
+        width={sidebarCollapsed ? 64 : 300}
+        style={{
+          background: '#a03a3a',
+          boxShadow: '2px 0 8px rgba(0,0,0,0.04)',
+          padding: sidebarCollapsed ? '16px 8px' : '32px 16px 16px 16px',
+          zIndex: 2,
+          transition: 'width 0.2s',
+          overflow: 'hidden',
+        }}
+        collapsed={sidebarCollapsed}
+        collapsible
+        trigger={null}
+      >
+        <div style={{ display: 'flex', alignItems: 'center', marginBottom: 16 }}>
+          {!sidebarCollapsed && <span style={{ fontWeight: 700, fontSize: 20 }}>Todo List</span>}
           <Button
             type="text"
-            icon={<BarChartOutlined />}
-            onClick={() => setShowProgressModal(true)}
-            style={{ color: 'white', fontSize: '22px', marginLeft: 12, marginRight: 0, verticalAlign: 'middle' }}
-            className="header-progress-btn"
-          />
-          <Button
-            type="text"
-            icon={<SettingOutlined />}
-            onClick={() => setCurrentPage('settings')}
-            style={{ color: 'white', fontSize: '22px', marginLeft: 12, verticalAlign: 'middle' }}
-            className="header-settings-btn"
+            icon={sidebarCollapsed ? <MenuUnfoldOutlined /> : <MenuFoldOutlined />}
+            onClick={() => setSidebarCollapsed(c => !c)}
+            style={{ marginLeft: 'auto', color: '#fff', fontSize: 20 }}
           />
         </div>
-        <Text style={{ color: 'rgba(255, 255, 255, 0.85)', display: 'block', textAlign: 'center', marginBottom: 8 }}>
-          Stay focused, stay productive
-        </Text>
-      </div>
-      <div className="timer-main">
-        {currentPage === 'timer' ? renderTimerPage() : (
-          <SettingsPage
-            settings={settings}
-            onSave={handleSettingsSave}
-            onCancel={handleSettingsCancel}
-          />
-        )}
-        <FocusModal
-          isOpen={showFocusModal}
-          onClose={handleModalClose}
-          onStart={handleFocusStart}
-        />
-        <Modal
-          open={showArtifactModal}
-          title={`Congratulations! Session #${state.completedSessions + 1} complete`}
-          onOk={handleArtifactSave}
-          onCancel={handleArtifactCancel}
-          okText="Save"
-          cancelText="Skip"
-          okButtonProps={{ disabled: !artifactVisibility }}
-        >
-          <p>Artifact</p>
-          <Input.TextArea
-            value={artifactInput}
-            onChange={e => setArtifactInput(e.target.value)}
-            rows={4}
-            placeholder="Describe your accomplishment, code, or notes..."
-            autoFocus
-          />
-          <div style={{ marginTop: 16 }}>
-            <Checkbox
-              checked={artifactVisibility}
-              onChange={e => setArtifactVisibility(e.target.checked)}
-            >
-              I have shared my process in the Slack channel / email.
-            </Checkbox>
-          </div>
-        </Modal>
-        <Modal
-          open={showProgressModal}
-          title="Pomodoro Progress"
-          onCancel={() => setShowProgressModal(false)}
-          footer={null}
-          width={520}
-        >
-          <div style={{ marginBottom: 16 }}>
-            <strong>Total Pomodoros completed:</strong> {artifacts.length}
-          </div>
+        {!sidebarCollapsed && <>
+          <Input.Group compact>
+            <Input
+              style={{ width: 'calc(100% - 40px)' }}
+              value={todoInput}
+              onChange={e => setTodoInput(e.target.value)}
+              onPressEnter={handleAddTodo}
+              placeholder="Add a new todo..."
+            />
+            <Button type="primary" icon={<PlusOutlined />} onClick={handleAddTodo} />
+          </Input.Group>
           <List
-            dataSource={artifacts}
-            renderItem={item => (
-              <List.Item>
-                <div>
-                  <strong>Session {item.session}</strong> <span style={{ color: '#888', fontSize: 12 }}>({item.timestamp})</span>
-                  {item.visibility && <span style={{ color: '#389e0d', marginLeft: 8 }}>[Visibility Shared]</span>}
-                  <div>{item.text}</div>
-                </div>
+            dataSource={todos}
+            renderItem={(item, idx) => (
+              <List.Item
+                actions={[
+                  <Popconfirm
+                    title="Delete this todo?"
+                    onConfirm={() => handleDeleteTodo(idx)}
+                    okText="Yes"
+                    cancelText="No"
+                  >
+                    <Button type="text" icon={<DeleteOutlined />} danger size="small" />
+                  </Popconfirm>
+                ]}
+                style={{ paddingLeft: 0, paddingRight: 0 }}
+              >
+                <Checkbox checked={item.completed} onChange={() => handleToggleTodo(idx)}>
+                  <span style={{ textDecoration: item.completed ? 'line-through' : 'none', color: item.completed ? '#aaa' : '#fff' }}>{item.text}</span>
+                </Checkbox>
               </List.Item>
             )}
-            style={{ width: '100%' }}
+            style={{ marginTop: 16 }}
           />
-        </Modal>
-      </div>
-    </div>
+        </>}
+      </Sider>
+      <Layout style={{ background: 'transparent' }}>
+        <Content>
+          <div className="app-header">
+            <div className="header-title-row">
+              <Title level={2} style={{ color: 'white', margin: 0, textAlign: 'center', display: 'inline-block' }}>
+                Pomodoro Timer
+              </Title>
+              <Button
+                type="text"
+                icon={<BarChartOutlined />}
+                onClick={() => setShowProgressModal(true)}
+                style={{ color: 'white', fontSize: '22px', marginLeft: 12, marginRight: 0, verticalAlign: 'middle' }}
+                className="header-progress-btn"
+              />
+              <Button
+                type="text"
+                icon={<SettingOutlined />}
+                onClick={() => setCurrentPage('settings')}
+                style={{ color: 'white', fontSize: '22px', marginLeft: 12, verticalAlign: 'middle' }}
+                className="header-settings-btn"
+              />
+            </div>
+            <Text style={{ color: 'rgba(255, 255, 255, 0.85)', display: 'block', textAlign: 'center', marginBottom: 8 }}>
+              Stay focused, stay productive
+            </Text>
+          </div>
+          <div className="timer-main">
+            {currentPage === 'timer' ? renderTimerPage() : (
+              <SettingsPage
+                settings={settings}
+                onSave={handleSettingsSave}
+                onCancel={handleSettingsCancel}
+              />
+            )}
+            <FocusModal
+              isOpen={showFocusModal}
+              onClose={handleModalClose}
+              onStart={handleFocusStart}
+            />
+            <Modal
+              open={showArtifactModal}
+              title={`Congratulations! Session #${state.completedSessions + 1} complete`}
+              onOk={handleArtifactSave}
+              onCancel={handleArtifactCancel}
+              okText="Save"
+              cancelText="Skip"
+              okButtonProps={{ disabled: !artifactVisibility }}
+            >
+              <p>List your artifact for this session:</p>
+              <Input.TextArea
+                value={artifactInput}
+                onChange={e => setArtifactInput(e.target.value)}
+                rows={4}
+                placeholder="Describe your accomplishment, code, or notes..."
+                autoFocus
+              />
+              <div style={{ marginTop: 16 }}>
+                <Checkbox
+                  checked={artifactVisibility}
+                  onChange={e => setArtifactVisibility(e.target.checked)}
+                >
+                  I have shared my process in the Slack channel / email.
+                </Checkbox>
+              </div>
+            </Modal>
+            <Modal
+              open={showProgressModal}
+              title="Pomodoro Progress"
+              onCancel={() => setShowProgressModal(false)}
+              footer={null}
+              width={520}
+            >
+              <div style={{ marginBottom: 16 }}>
+                <strong>Total Pomodoros completed:</strong> {artifacts.length}
+              </div>
+              <List
+                dataSource={artifacts}
+                renderItem={item => (
+                  <List.Item>
+                    <div>
+                      <strong>Session {item.session}</strong> <span style={{ color: '#888', fontSize: 12 }}>({item.timestamp})</span>
+                      {item.visibility && <span style={{ color: '#389e0d', marginLeft: 8 }}>[Visibility Shared]</span>}
+                      <div>{item.text}</div>
+                    </div>
+                  </List.Item>
+                )}
+                style={{ width: '100%' }}
+              />
+            </Modal>
+          </div>
+        </Content>
+      </Layout>
+    </Layout>
   );
 };
 
