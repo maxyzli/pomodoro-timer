@@ -29,7 +29,7 @@ const App: React.FC = () => {
   const [showArtifactModal, setShowArtifactModal] = useState(false);
   const [artifactInput, setArtifactInput] = useState('');
   const [artifactVisibility, setArtifactVisibility] = useState(false);
-  const [artifacts, setArtifacts] = useState<{ session: number; text: string; timestamp: string; visibility: boolean }[]>(() => {
+  const [artifacts, setArtifacts] = useState<{ session: number; text: string; timestamp: string; visibility: boolean; task?: string }[]>(() => {
     const saved = localStorage.getItem(ARTIFACTS_KEY);
     return saved ? JSON.parse(saved) : [];
   });
@@ -182,6 +182,7 @@ const App: React.FC = () => {
         text: artifactInput,
         timestamp: new Date().toLocaleString(),
         visibility: artifactVisibility,
+        task: currentFocusTask,
       },
       ...prev,
     ]);
@@ -413,9 +414,9 @@ const App: React.FC = () => {
                 renderItem={item => (
                   <List.Item>
                     <div>
-                      <strong>Session {item.session}</strong> <span style={{ color: '#888', fontSize: 12 }}>({item.timestamp})</span>
-                      {item.visibility && <span style={{ color: '#389e0d', marginLeft: 8 }}>[Visibility Shared]</span>}
-                      <div>{item.text}</div>
+                      <strong>Session {item.session}</strong> <span style={{ color: '#aaa', fontSize: 12 }}>({item.timestamp})</span>
+                      <div style={{ marginTop: 4 }}><span style={{ color: '#444', fontWeight: 500 }}>Task:</span> {item.task ? item.task : <span style={{ color: '#888' }}>—</span>}</div>
+                      <div style={{ marginTop: 4 }}><span style={{ color: '#444', fontWeight: 500 }}>Artifact:</span> {item.text}</div>
                     </div>
                   </List.Item>
                 )}
@@ -424,12 +425,15 @@ const App: React.FC = () => {
             </div>
           )}
           {currentPage === 'settings' && (
-            <div style={{ maxWidth: 600, margin: '40px auto', background: 'rgba(255,255,255,0.04)', borderRadius: 16, padding: 32 }}>
-              <SettingsPage
-                settings={settings}
-                onSave={handleSettingsSave}
-                onCancel={handleSettingsCancel}
-              />
+            <div style={{ maxWidth: 800, margin: '24px auto', background: 'rgba(255,255,255,0.04)', borderRadius: 16, padding: 32, textAlign: 'center' }}>
+              <div style={{ fontWeight: 700, fontSize: 32, marginBottom: 24, textAlign: 'center' }}>Timer Settings</div>
+              <div style={{ textAlign: 'left' }}>
+                <SettingsPage
+                  settings={settings}
+                  onSave={handleSettingsSave}
+                  onCancel={handleSettingsCancel}
+                />
+              </div>
             </div>
           )}
           <Modal

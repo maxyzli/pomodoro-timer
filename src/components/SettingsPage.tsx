@@ -27,38 +27,18 @@ export const SettingsPage: React.FC<SettingsPageProps> = ({
   const [formSettings, setFormSettings] = useState(settings);
 
   const handleChange = (key: string, value: any) => {
-    setFormSettings(prev => ({
-      ...prev,
+    const updated = {
+      ...formSettings,
       [key]: value,
-    }));
-  };
-
-  const handleSave = () => {
-    onSave(formSettings);
-  };
-
-  const handleCancel = () => {
-    setFormSettings(settings); // Reset to original settings
-    onCancel();
+    };
+    setFormSettings(updated);
+    onSave(updated); // Auto-save on change
   };
 
   return (
     <div style={{ padding: '24px', maxWidth: '800px', margin: '0 auto' }}>
       <Card>
-        <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '24px' }}>
-          <Title level={2} style={{ margin: 0 }}>
-            Timer Settings
-          </Title>
-          <Space>
-            <Button icon={<CloseOutlined />} onClick={handleCancel}>
-              Cancel
-            </Button>
-            <Button type="primary" icon={<SaveOutlined />} onClick={handleSave}>
-              Save Settings
-            </Button>
-          </Space>
-        </div>
-
+        {/* Remove Cancel/Save buttons */}
         <Row gutter={[24, 24]}>
           <Col xs={24} md={12}>
             <Card size="small" title="Timer Durations">
