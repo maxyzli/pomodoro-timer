@@ -381,7 +381,7 @@ const App: React.FC = () => {
       <TimerDisplay>
         <TimeText>{formatTime(state.timeLeft)}</TimeText>
       </TimerDisplay>
-      {currentFocusTask && (
+      {state.currentMode === 'work' && currentFocusTask && (
         <CurrentTask>
           <span style={{ opacity: 0.8, fontWeight: 400, fontSize: '1rem' }}>Current Task:</span><br />
           {currentFocusTask}
@@ -460,7 +460,7 @@ const App: React.FC = () => {
             </div>
           )}
           {currentPage === 'todo' && (
-            <div style={{ maxWidth: 480, margin: '40px auto', background: 'rgba(255,255,255,0.04)', borderRadius: 16, padding: 32 }}>
+            <div style={{ width: '600px', maxWidth: '90%', margin: '40px auto', background: 'rgba(255,255,255,0.04)', borderRadius: 16, padding: 32 }}>
               <Input.Group compact>
                 <Input
                   style={{ width: 'calc(100% - 40px)' }}
@@ -497,7 +497,7 @@ const App: React.FC = () => {
             </div>
           )}
           {currentPage === 'stats' && (
-            <div style={{ maxWidth: 800, margin: '40px auto', background: 'rgba(255,255,255,0.04)', borderRadius: 16, padding: 32 }}>
+            <div style={{ width: '600px', maxWidth: '90%', margin: '40px auto', background: 'rgba(255,255,255,0.04)', borderRadius: 16, padding: '32px 24px' }}>
               <div style={{ fontWeight: 700, fontSize: 24, marginBottom: 16 }}>Pomodoro Progress</div>
               <div style={{ marginBottom: 16 }}>
                 <strong>Total Pomodoros completed:</strong> {artifacts.length}
