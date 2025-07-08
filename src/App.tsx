@@ -359,9 +359,9 @@ const App: React.FC = () => {
   const handleDownloadStats = () => {
     const exportData = artifacts.map(item => ({
       session: item.session,
+      task: item.task || null,
       artifact: item.text,
-      timestamp: new Date(item.timestamp).toISOString(),
-      task: item.task || null
+      timestamp: new Date(item.timestamp).toISOString()
     }));
     
     const dataStr = JSON.stringify(exportData, null, 2);
