@@ -1,6 +1,6 @@
 import React, { useEffect, useState } from 'react';
 import { Layout, Typography, Card, Space, Divider, Button, Tag, Progress, Row, Col, Modal, Input, List, Popconfirm, Checkbox } from 'antd';
-import { PlayCircleOutlined, PauseCircleOutlined, ReloadOutlined, SettingOutlined, DeleteOutlined } from '@ant-design/icons';
+import { PlayCircleOutlined, PauseCircleOutlined, ReloadOutlined, SettingOutlined, DeleteOutlined, BarChartOutlined } from '@ant-design/icons';
 import { useTimer } from './hooks/useTimer';
 import { FocusModal } from './components/FocusModal';
 import { SettingsPage } from './components/SettingsPage';
@@ -24,6 +24,7 @@ const App: React.FC = () => {
     const saved = localStorage.getItem(ARTIFACTS_KEY);
     return saved ? JSON.parse(saved) : [];
   });
+  const [showProgressModal, setShowProgressModal] = useState(false);
 
   // Save artifacts to localStorage whenever they change
   useEffect(() => {
@@ -148,7 +149,7 @@ const App: React.FC = () => {
   const handleArtifactSave = () => {
     setArtifacts(prev => [
       {
-        session: state.completedSessions,
+        session: state.completedSessions + 1,
         text: artifactInput,
         timestamp: new Date().toLocaleString(),
         visibility: artifactVisibility,
@@ -292,6 +293,13 @@ const App: React.FC = () => {
           </Title>
           <Button
             type="text"
+            icon={<BarChartOutlined />}
+            onClick={() => setShowProgressModal(true)}
+            style={{ color: 'white', fontSize: '22px', marginLeft: 12, marginRight: 0, verticalAlign: 'middle' }}
+            className="header-progress-btn"
+          />
+          <Button
+            type="text"
             icon={<SettingOutlined />}
             onClick={() => setCurrentPage('settings')}
             style={{ color: 'white', fontSize: '22px', marginLeft: 12, verticalAlign: 'middle' }}
@@ -317,22 +325,14 @@ const App: React.FC = () => {
         />
         <Modal
           open={showArtifactModal}
-          title={`Congratulations! Session #${state.completedSessions} complete`}
+          title={`Congratulations! Session #${state.completedSessions + 1} complete`}
           onOk={handleArtifactSave}
           onCancel={handleArtifactCancel}
           okText="Save"
           cancelText="Skip"
           okButtonProps={{ disabled: !artifactVisibility }}
         >
-          <div style={{ marginBottom: 16 }}>
-            <Checkbox
-              checked={artifactVisibility}
-              onChange={e => setArtifactVisibility(e.target.checked)}
-            >
-              I have shared my process in the Slack channel / email.
-            </Checkbox>
-          </div>
-          <p>What did you accomplish? Write your artifact below:</p>
+          <p>Artifact</p>
           <Input.TextArea
             value={artifactInput}
             onChange={e => setArtifactInput(e.target.value)}
@@ -340,33 +340,39 @@ const App: React.FC = () => {
             placeholder="Describe your accomplishment, code, or notes..."
             autoFocus
           />
-        </Modal>
-        <Divider style={{ margin: '48px 0 24px 0', borderColor: '#fff', opacity: 0.2 }} />
-        <List
-          header={<div>Artifacts</div>}
-          dataSource={artifacts}
-          renderItem={(item, idx) => (
-            <List.Item
-              actions={[
-                <Popconfirm
-                  title="Delete this artifact?"
-                  onConfirm={() => setArtifacts(prev => prev.filter((_, i) => i !== idx))}
-                  okText="Yes"
-                  cancelText="No"
-                >
-                  <Button type="text" icon={<DeleteOutlined />} danger />
-                </Popconfirm>
-              ]}
+          <div style={{ marginTop: 16 }}>
+            <Checkbox
+              checked={artifactVisibility}
+              onChange={e => setArtifactVisibility(e.target.checked)}
             >
-              <div>
-                <strong>Session {item.session}</strong> <span style={{ color: '#888', fontSize: 12 }}>({item.timestamp})</span>
-                {item.visibility && <span style={{ color: '#389e0d', marginLeft: 8 }}>[Visibility Shared]</span>}
-                <div>{item.text}</div>
-              </div>
-            </List.Item>
-          )}
-          style={{ marginTop: 0, width: '100%', maxWidth: 480 }}
-        />
+              I have shared my process in the Slack channel / email.
+            </Checkbox>
+          </div>
+        </Modal>
+        <Modal
+          open={showProgressModal}
+          title="Pomodoro Progress"
+          onCancel={() => setShowProgressModal(false)}
+          footer={null}
+          width={520}
+        >
+          <div style={{ marginBottom: 16 }}>
+            <strong>Total Pomodoros completed:</strong> {artifacts.length}
+          </div>
+          <List
+            dataSource={artifacts}
+            renderItem={item => (
+              <List.Item>
+                <div>
+                  <strong>Session {item.session}</strong> <span style={{ color: '#888', fontSize: 12 }}>({item.timestamp})</span>
+                  {item.visibility && <span style={{ color: '#389e0d', marginLeft: 8 }}>[Visibility Shared]</span>}
+                  <div>{item.text}</div>
+                </div>
+              </List.Item>
+            )}
+            style={{ width: '100%' }}
+          />
+        </Modal>
       </div>
     </div>
   );
