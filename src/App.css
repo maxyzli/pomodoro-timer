@@ -59,10 +59,7 @@
   text-align: center;
 }
 
-.settings-toggle {
-  text-align: center;
-  margin-bottom: 16px;
-}
+
 
 /* Responsive adjustments */
 @media (max-width: 768px) {
