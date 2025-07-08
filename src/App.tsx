@@ -1,6 +1,6 @@
 import React, { useEffect, useState } from 'react';
-import { Layout, Typography, Card, Space, Divider, Button, Tag, Progress, Row, Col } from 'antd';
-import { PlayCircleOutlined, PauseCircleOutlined, ReloadOutlined, SettingOutlined } from '@ant-design/icons';
+import { Layout, Typography, Card, Space, Divider, Button, Tag, Progress, Row, Col, Modal, Input, List, Popconfirm, Checkbox } from 'antd';
+import { PlayCircleOutlined, PauseCircleOutlined, ReloadOutlined, SettingOutlined, DeleteOutlined } from '@ant-design/icons';
 import { useTimer } from './hooks/useTimer';
 import { FocusModal } from './components/FocusModal';
 import { SettingsPage } from './components/SettingsPage';
@@ -11,7 +11,38 @@ const { Title, Text } = Typography;
 
 type Page = 'timer' | 'settings';
 
+const ARTIFACTS_KEY = 'pomodoroArtifacts';
+
 const App: React.FC = () => {
+  const [currentPage, setCurrentPage] = useState<Page>('timer');
+  const [showFocusModal, setShowFocusModal] = useState(false);
+  const [currentFocusTask, setCurrentFocusTask] = useState('');
+  const [showArtifactModal, setShowArtifactModal] = useState(false);
+  const [artifactInput, setArtifactInput] = useState('');
+  const [artifactVisibility, setArtifactVisibility] = useState(false);
+  const [artifacts, setArtifacts] = useState<{ session: number; text: string; timestamp: string; visibility: boolean }[]>(() => {
+    const saved = localStorage.getItem(ARTIFACTS_KEY);
+    return saved ? JSON.parse(saved) : [];
+  });
+
+  // Save artifacts to localStorage whenever they change
+  useEffect(() => {
+    localStorage.setItem(ARTIFACTS_KEY, JSON.stringify(artifacts));
+  }, [artifacts]);
+
+  // Request notification permission on mount
+  useEffect(() => {
+    if ('Notification' in window && Notification.permission === 'default') {
+      Notification.requestPermission();
+    }
+  }, []);
+
+  // Show modal when a work session completes
+  const handleWorkSessionComplete = () => {
+    setShowArtifactModal(true);
+  };
+
+  // Use the updated useTimer hook
   const {
     state,
     settings,
@@ -20,18 +51,7 @@ const App: React.FC = () => {
     resetTimer,
     switchMode,
     updateSettings,
-  } = useTimer();
-
-  const [currentPage, setCurrentPage] = useState<Page>('timer');
-  const [showFocusModal, setShowFocusModal] = useState(false);
-  const [currentFocusTask, setCurrentFocusTask] = useState('');
-
-  // Request notification permission on mount
-  useEffect(() => {
-    if ('Notification' in window && Notification.permission === 'default') {
-      Notification.requestPermission();
-    }
-  }, []);
+  } = useTimer(handleWorkSessionComplete);
 
   const getTotalTimeForMode = (mode: string): number => {
     switch (mode) {
@@ -123,6 +143,27 @@ const App: React.FC = () => {
 
   const handleSettingsCancel = () => {
     setCurrentPage('timer');
+  };
+
+  const handleArtifactSave = () => {
+    setArtifacts(prev => [
+      {
+        session: state.completedSessions,
+        text: artifactInput,
+        timestamp: new Date().toLocaleString(),
+        visibility: artifactVisibility,
+      },
+      ...prev,
+    ]);
+    setArtifactInput('');
+    setArtifactVisibility(false);
+    setShowArtifactModal(false);
+  };
+
+  const handleArtifactCancel = () => {
+    setArtifactInput('');
+    setArtifactVisibility(false);
+    setShowArtifactModal(false);
   };
 
   const progressPercentage = ((getTotalTimeForMode(state.currentMode) - state.timeLeft) / getTotalTimeForMode(state.currentMode)) * 100;
@@ -273,6 +314,58 @@ const App: React.FC = () => {
           isOpen={showFocusModal}
           onClose={handleModalClose}
           onStart={handleFocusStart}
+        />
+        <Modal
+          open={showArtifactModal}
+          title={`Congratulations! Session #${state.completedSessions} complete`}
+          onOk={handleArtifactSave}
+          onCancel={handleArtifactCancel}
+          okText="Save"
+          cancelText="Skip"
+          okButtonProps={{ disabled: !artifactVisibility }}
+        >
+          <div style={{ marginBottom: 16 }}>
+            <Checkbox
+              checked={artifactVisibility}
+              onChange={e => setArtifactVisibility(e.target.checked)}
+            >
+              I have shared my process in the Slack channel / email.
+            </Checkbox>
+          </div>
+          <p>What did you accomplish? Write your artifact below:</p>
+          <Input.TextArea
+            value={artifactInput}
+            onChange={e => setArtifactInput(e.target.value)}
+            rows={4}
+            placeholder="Describe your accomplishment, code, or notes..."
+            autoFocus
+          />
+        </Modal>
+        <Divider style={{ margin: '48px 0 24px 0', borderColor: '#fff', opacity: 0.2 }} />
+        <List
+          header={<div>Artifacts</div>}
+          dataSource={artifacts}
+          renderItem={(item, idx) => (
+            <List.Item
+              actions={[
+                <Popconfirm
+                  title="Delete this artifact?"
+                  onConfirm={() => setArtifacts(prev => prev.filter((_, i) => i !== idx))}
+                  okText="Yes"
+                  cancelText="No"
+                >
+                  <Button type="text" icon={<DeleteOutlined />} danger />
+                </Popconfirm>
+              ]}
+            >
+              <div>
+                <strong>Session {item.session}</strong> <span style={{ color: '#888', fontSize: 12 }}>({item.timestamp})</span>
+                {item.visibility && <span style={{ color: '#389e0d', marginLeft: 8 }}>[Visibility Shared]</span>}
+                <div>{item.text}</div>
+              </div>
+            </List.Item>
+          )}
+          style={{ marginTop: 0, width: '100%', maxWidth: 480 }}
         />
       </div>
     </div>

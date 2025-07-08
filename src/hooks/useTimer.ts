@@ -24,7 +24,7 @@ const saveSettings = (settings: TimerSettings) => {
   localStorage.setItem('pomodoroSettings', JSON.stringify(settings));
 };
 
-export const useTimer = () => {
+export const useTimer = (onWorkSessionComplete?: () => void) => {
   const [settings, setSettings] = useState<TimerSettings>(loadSettings);
   const [state, setState] = useState<TimerState>({
     timeLeft: settings.workTime * 60,
@@ -102,6 +102,11 @@ export const useTimer = () => {
         timeLeft: getTimeForMode(shouldTakeLongBreak ? 'long-break' : 'short-break'),
       }));
 
+      // Trigger artifact modal callback
+      if (onWorkSessionComplete) {
+        onWorkSessionComplete();
+      }
+
       // Auto-start break if enabled
       if (settings.autoStartBreaks) {
         setTimeout(() => {
@@ -122,7 +127,7 @@ export const useTimer = () => {
         }, 1000);
       }
     }
-  }, [state.currentMode, state.completedSessions, settings.longBreakInterval, settings.autoStartBreaks, settings.autoStartPomodoros, getTimeForMode, playNotification, showNotification]);
+  }, [state.currentMode, state.completedSessions, settings.longBreakInterval, settings.autoStartBreaks, settings.autoStartPomodoros, getTimeForMode, playNotification, showNotification, onWorkSessionComplete]);
 
   const startTimer = useCallback(() => {
     if (state.isRunning) return;
