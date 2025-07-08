@@ -307,7 +307,6 @@ const App: React.FC = () => {
 
   const handleSettingsSave = (newSettings: any) => {
     updateSettings(newSettings);
-    setCurrentPage('timer');
   };
 
   const handleSettingsCancel = () => {
