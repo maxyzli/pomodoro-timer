@@ -1,7 +1,7 @@
 import React, { useEffect, useState } from 'react';
-import { Layout, Typography, Card, Space, Divider, Button, Tag, Progress, Row, Col, Modal, Input, List, Popconfirm, Checkbox, Tooltip, Menu, DatePicker } from 'antd';
+import { Layout, Typography, Card, Space, Divider, Button, Tag, Progress, Row, Col, Modal, Input, List, Popconfirm, Checkbox, Tooltip, Menu, DatePicker, Upload, message } from 'antd';
 import dayjs from 'dayjs';
-import { PlayCircleOutlined, PauseCircleOutlined, ReloadOutlined, SettingOutlined, DeleteOutlined, BarChartOutlined, PlusOutlined, MenuFoldOutlined, MenuUnfoldOutlined, UnorderedListOutlined, ClockCircleOutlined, DownloadOutlined } from '@ant-design/icons';
+import { PlayCircleOutlined, PauseCircleOutlined, ReloadOutlined, SettingOutlined, DeleteOutlined, BarChartOutlined, PlusOutlined, MenuFoldOutlined, MenuUnfoldOutlined, UnorderedListOutlined, ClockCircleOutlined, DownloadOutlined, UploadOutlined, CloudDownloadOutlined } from '@ant-design/icons';
 import { useTimer } from './hooks/useTimer';
 import { FocusModal } from './components/FocusModal';
 import { SettingsPage } from './components/SettingsPage';
@@ -478,6 +478,69 @@ const App: React.FC = () => {
     linkElement.click();
   };
 
+  const handleBackupExport = () => {
+    const backupData = {
+      version: '1.0',
+      exportDate: new Date().toISOString(),
+      dailyData,
+      totalDays: Object.keys(dailyData).length,
+      totalSessions: Object.values(dailyData).reduce((total: number, day: any) => total + (day.artifacts?.length || 0), 0)
+    };
+    
+    const dataStr = JSON.stringify(backupData, null, 2);
+    const dataUri = 'data:application/json;charset=utf-8,'+ encodeURIComponent(dataStr);
+    
+    const filename = `pomodoro-backup-${new Date().toISOString().split('T')[0]}.json`;
+    
+    const linkElement = document.createElement('a');
+    linkElement.setAttribute('href', dataUri);
+    linkElement.setAttribute('download', filename);
+    linkElement.click();
+    
+    message.success('Backup exported successfully!');
+  };
+
+  const handleBackupImport = (file: File) => {
+    const reader = new FileReader();
+    reader.onload = (e) => {
+      try {
+        const backupData = JSON.parse(e.target?.result as string);
+        
+        // Validate backup data structure
+        if (!backupData.dailyData || typeof backupData.dailyData !== 'object') {
+          throw new Error('Invalid backup file format');
+        }
+        
+        // Merge with existing data (user choice to overwrite or merge)
+        Modal.confirm({
+          title: 'Restore Backup',
+          content: `This backup contains ${backupData.totalDays} days of data with ${backupData.totalSessions} total sessions. Do you want to merge with existing data or replace all data?`,
+          okText: 'Merge',
+          cancelText: 'Replace All',
+          onOk: () => {
+            // Merge mode
+            setDailyData(prev => ({
+              ...prev,
+              ...backupData.dailyData
+            }));
+            message.success('Backup merged successfully!');
+          },
+          onCancel: () => {
+            // Replace mode
+            setDailyData(backupData.dailyData);
+            message.success('Backup restored successfully!');
+          }
+        });
+        
+      } catch (error) {
+        message.error('Invalid backup file. Please select a valid Pomodoro backup.');
+      }
+    };
+    reader.readAsText(file);
+    
+    return false; // Prevent auto upload
+  };
+
   const renderTimerPage = () => (
     <TimerContainer>
       <ModeTabs>
@@ -550,6 +613,8 @@ const App: React.FC = () => {
         settings={settings}
         onSave={handleSettingsSave}
         onCancel={handleSettingsCancel}
+        onBackupExport={handleBackupExport}
+        onBackupImport={handleBackupImport}
       />
     </Content>
   );
@@ -712,6 +777,8 @@ const App: React.FC = () => {
               settings={settings}
               onSave={handleSettingsSave}
               onCancel={handleSettingsCancel}
+              onBackupExport={handleBackupExport}
+              onBackupImport={handleBackupImport}
             />
           )}
           <Modal

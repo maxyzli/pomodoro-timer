@@ -1,6 +1,6 @@
 import React, { useState } from 'react';
-import { Card, Form, InputNumber, Switch, Space, Typography, Button, Row, Col, Divider } from 'antd';
-import { SaveOutlined, CloseOutlined } from '@ant-design/icons';
+import { Card, Form, InputNumber, Switch, Space, Typography, Button, Row, Col, Divider, Upload } from 'antd';
+import { SaveOutlined, CloseOutlined, CloudDownloadOutlined, UploadOutlined } from '@ant-design/icons';
 
 const { Title } = Typography;
 
@@ -17,12 +17,16 @@ interface SettingsPageProps {
   };
   onSave: (settings: any) => void;
   onCancel: () => void;
+  onBackupExport?: () => void;
+  onBackupImport?: (file: File) => boolean;
 }
 
 export const SettingsPage: React.FC<SettingsPageProps> = ({
   settings,
   onSave,
   onCancel,
+  onBackupExport,
+  onBackupImport,
 }) => {
   const [formSettings, setFormSettings] = useState(settings);
 
@@ -117,6 +121,52 @@ export const SettingsPage: React.FC<SettingsPageProps> = ({
                     onChange={(checked) => handleChange('notificationsEnabled', checked)}
                   />
                 </Form.Item>
+              </Space>
+            </Card>
+          </Col>
+        </Row>
+
+        <Row gutter={[24, 24]} style={{ marginTop: 24 }}>
+          <Col xs={24}>
+            <Card size="small" title="Data Backup & Restore">
+              <Space direction="vertical" style={{ width: '100%' }} size="large">
+                <div>
+                  <Typography.Text>
+                    Backup your entire Pomodoro history including all daily data, todos, and session artifacts.
+                  </Typography.Text>
+                </div>
+                <Row gutter={16}>
+                  <Col xs={24} sm={12}>
+                    <Button
+                      type="primary"
+                      icon={<CloudDownloadOutlined />}
+                      onClick={onBackupExport}
+                      block
+                      size="large"
+                    >
+                      Export Backup
+                    </Button>
+                  </Col>
+                  <Col xs={24} sm={12}>
+                    <Upload
+                      accept=".json"
+                      beforeUpload={onBackupImport}
+                      showUploadList={false}
+                    >
+                      <Button
+                        icon={<UploadOutlined />}
+                        block
+                        size="large"
+                      >
+                        Import Backup
+                      </Button>
+                    </Upload>
+                  </Col>
+                </Row>
+                <Typography.Text type="secondary" style={{ fontSize: 12 }}>
+                  Backup files contain all your historical data and can be imported on any device.
+                  Import will give you the option to merge with existing data or replace it entirely.
+                </Typography.Text>
               </Space>
             </Card>
           </Col>
