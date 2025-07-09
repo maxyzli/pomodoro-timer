@@ -318,25 +318,23 @@ const App: React.FC = () => {
   };
 
   const handleArtifactSave = () => {
-    // Only save if both conditions are met
-    if (artifactVisibility && artifactInput.trim()) {
-      setArtifacts(prev => [
-        {
-          session: state.completedSessions + 1,
-          text: artifactInput,
-          timestamp: new Date().toLocaleString(),
-          visibility: artifactVisibility,
-          task: currentFocusTask,
-        },
-        ...prev,
-      ]);
-      setArtifactInput('');
-      setArtifactVisibility(false);
-      setShowArtifactModal(false);
-      
-      // Now handle auto-start break if enabled
-      handlePostWorkSessionComplete();
-    }
+    // Save the artifact (button is already disabled if conditions aren't met)
+    setArtifacts(prev => [
+      {
+        session: state.completedSessions + 1,
+        text: artifactInput,
+        timestamp: new Date().toLocaleString(),
+        visibility: artifactVisibility,
+        task: currentFocusTask,
+      },
+      ...prev,
+    ]);
+    setArtifactInput('');
+    setArtifactVisibility(false);
+    setShowArtifactModal(false);
+    
+    // Now handle auto-start break if enabled
+    handlePostWorkSessionComplete();
   };
 
   const handleArtifactCancel = () => {
