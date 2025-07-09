@@ -501,12 +501,18 @@ const App: React.FC = () => {
           {currentPage === 'todo' && (
             <div style={{ width: '600px', maxWidth: '90%', margin: '40px auto', background: 'rgba(255,255,255,0.04)', borderRadius: 16, padding: 32 }}>
               <Input.Group compact>
-                <Input
+                <Input.TextArea
                   style={{ width: 'calc(100% - 40px)' }}
                   value={todoInput}
                   onChange={e => setTodoInput(e.target.value)}
-                  onPressEnter={handleAddTodo}
-                  placeholder="Add a new todo..."
+                  onPressEnter={(e) => {
+                    if (e.ctrlKey || e.metaKey) {
+                      handleAddTodo();
+                    }
+                  }}
+                  placeholder="Add a new todo... (Ctrl+Enter to add)"
+                  rows={2}
+                  autoSize={{ minRows: 1, maxRows: 4 }}
                 />
                 <Button type="primary" icon={<PlusOutlined />} onClick={handleAddTodo} />
               </Input.Group>
