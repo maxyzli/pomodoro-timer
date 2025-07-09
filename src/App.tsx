@@ -327,7 +327,6 @@ const App: React.FC = () => {
     // Save the artifact
     setArtifacts(prev => [
       {
-        session: state.completedSessions + 1,
         text: artifactInput,
         timestamp: new Date().toLocaleString(),
         visibility: artifactVisibility,
@@ -374,8 +373,8 @@ const App: React.FC = () => {
   };
 
   const handleDownloadStats = () => {
-    const exportData = artifacts.map(item => ({
-      session: item.session,
+    const exportData = artifacts.map((item, idx) => ({
+      session: artifacts.length - idx,
       task: item.task || null,
       artifact: item.text,
       timestamp: new Date(item.timestamp).toISOString()
@@ -567,7 +566,7 @@ const App: React.FC = () => {
                     ]}
                   >
                     <div>
-                      <strong>Session {item.session}</strong> <span style={{ color: '#666', fontSize: 12 }}>({item.timestamp})</span>
+                      <strong>Session {artifacts.length - idx}</strong> <span style={{ color: '#666', fontSize: 12 }}>({item.timestamp})</span>
                       <div style={{ marginTop: 8, color: '#333', fontWeight: 500 }}>Task:</div>
                       <div style={{ marginLeft: 16, color: '#111', marginBottom: 8 }}>{item.task ? item.task : <span style={{ color: '#666' }}>—</span>}</div>
                       <div style={{ color: '#333', fontWeight: 500 }}>Artifact:</div>
