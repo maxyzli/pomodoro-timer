@@ -317,19 +317,22 @@ const App: React.FC = () => {
   };
 
   const handleArtifactSave = () => {
-    setArtifacts(prev => [
-      {
-        session: state.completedSessions + 1,
-        text: artifactInput,
-        timestamp: new Date().toLocaleString(),
-        visibility: artifactVisibility,
-        task: currentFocusTask,
-      },
-      ...prev,
-    ]);
-    setArtifactInput('');
-    setArtifactVisibility(false);
-    setShowArtifactModal(false);
+    // Only save if both conditions are met
+    if (artifactVisibility && artifactInput.trim()) {
+      setArtifacts(prev => [
+        {
+          session: state.completedSessions + 1,
+          text: artifactInput,
+          timestamp: new Date().toLocaleString(),
+          visibility: artifactVisibility,
+          task: currentFocusTask,
+        },
+        ...prev,
+      ]);
+      setArtifactInput('');
+      setArtifactVisibility(false);
+      setShowArtifactModal(false);
+    }
   };
 
   const handleArtifactCancel = () => {
