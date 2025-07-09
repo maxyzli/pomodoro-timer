@@ -1,5 +1,6 @@
 import React, { useEffect, useState } from 'react';
-import { Layout, Typography, Card, Space, Divider, Button, Tag, Progress, Row, Col, Modal, Input, List, Popconfirm, Checkbox, Tooltip, Menu } from 'antd';
+import { Layout, Typography, Card, Space, Divider, Button, Tag, Progress, Row, Col, Modal, Input, List, Popconfirm, Checkbox, Tooltip, Menu, DatePicker } from 'antd';
+import dayjs from 'dayjs';
 import { PlayCircleOutlined, PauseCircleOutlined, ReloadOutlined, SettingOutlined, DeleteOutlined, BarChartOutlined, PlusOutlined, MenuFoldOutlined, MenuUnfoldOutlined, UnorderedListOutlined, ClockCircleOutlined, DownloadOutlined } from '@ant-design/icons';
 import { useTimer } from './hooks/useTimer';
 import { FocusModal } from './components/FocusModal';
@@ -12,8 +13,24 @@ const { Sider } = Layout;
 
 type Page = 'timer' | 'settings' | 'todo' | 'stats';
 
-const ARTIFACTS_KEY = 'pomodoroArtifacts';
-const TODOS_KEY = 'pomodoroTodos';
+const DAILY_DATA_KEY = 'pomodoroDailyData';
+
+// Helper functions for date management
+const getTodayKey = (): string => {
+  return new Date().toISOString().split('T')[0]; // YYYY-MM-DD format
+};
+
+const loadDailyData = () => {
+  const saved = localStorage.getItem(DAILY_DATA_KEY);
+  if (saved) {
+    return JSON.parse(saved);
+  }
+  return {};
+};
+
+const saveDailyData = (data: any) => {
+  localStorage.setItem(DAILY_DATA_KEY, JSON.stringify(data));
+};
 
 const NAV_ITEMS = [
   { key: 'timer', icon: <ClockCircleOutlined />, label: 'Timer' },
@@ -168,27 +185,37 @@ const App: React.FC = () => {
   const [showArtifactModal, setShowArtifactModal] = useState(false);
   const [artifactInput, setArtifactInput] = useState('');
   const [artifactVisibility, setArtifactVisibility] = useState(false);
-  const [artifacts, setArtifacts] = useState<{ session: number; text: string; timestamp: string; visibility: boolean; task?: string }[]>(() => {
-    const saved = localStorage.getItem(ARTIFACTS_KEY);
-    return saved ? JSON.parse(saved) : [];
+  const [selectedDate, setSelectedDate] = useState<string>(getTodayKey());
+  const [dailyData, setDailyData] = useState(() => {
+    const data = loadDailyData();
+    // Migrate old data if it exists
+    const oldArtifacts = localStorage.getItem('pomodoroArtifacts');
+    const oldTodos = localStorage.getItem('pomodoroTodos');
+    if (oldArtifacts && !data[getTodayKey()]) {
+      const today = getTodayKey();
+      data[today] = {
+        artifacts: JSON.parse(oldArtifacts),
+        todos: oldTodos ? JSON.parse(oldTodos) : []
+      };
+      saveDailyData(data);
+      // Remove old keys
+      localStorage.removeItem('pomodoroArtifacts');
+      localStorage.removeItem('pomodoroTodos');
+    }
+    return data;
   });
   const [showProgressModal, setShowProgressModal] = useState(false);
-  // Remove Sider and sidebarCollapsed state
 
-  const [todos, setTodos] = useState<{ text: string; completed: boolean }[]>(() => {
-    const saved = localStorage.getItem(TODOS_KEY);
-    return saved ? JSON.parse(saved) : [];
-  });
+  // Current day's data
+  const currentDayData = dailyData[selectedDate] || { artifacts: [], todos: [] };
+  const artifacts = currentDayData.artifacts;
+  const todos = currentDayData.todos;
   const [todoInput, setTodoInput] = useState('');
 
-  // Save artifacts to localStorage whenever they change
+  // Save daily data to localStorage whenever it changes
   useEffect(() => {
-    localStorage.setItem(ARTIFACTS_KEY, JSON.stringify(artifacts));
-  }, [artifacts]);
-
-  useEffect(() => {
-    localStorage.setItem(TODOS_KEY, JSON.stringify(todos));
-  }, [todos]);
+    saveDailyData(dailyData);
+  }, [dailyData]);
 
   // Request notification permission on mount
   useEffect(() => {
@@ -313,24 +340,29 @@ const App: React.FC = () => {
   };
 
   const handleArtifactSave = () => {
-    console.log('handleArtifactSave called', { artifactVisibility, artifactInput: artifactInput.trim() });
-    
     // Only proceed if checkbox is checked (allow empty artifact text)
     if (!artifactVisibility) {
-      console.log('Checkbox not checked, not saving');
       return;
     }
     
-    // Save the artifact
-    setArtifacts(prev => [
-      {
-        text: artifactInput.trim() || '(No artifact description)',
-        timestamp: new Date().toLocaleString(),
-        visibility: artifactVisibility,
-        task: currentFocusTask,
-      },
+    // Save the artifact to today's data
+    const today = getTodayKey();
+    setDailyData(prev => ({
       ...prev,
-    ]);
+      [today]: {
+        ...prev[today],
+        artifacts: [
+          {
+            text: artifactInput.trim() || '(No artifact description)',
+            timestamp: new Date().toLocaleString(),
+            visibility: artifactVisibility,
+            task: currentFocusTask,
+          },
+          ...(prev[today]?.artifacts || []),
+        ],
+        todos: prev[today]?.todos || []
+      }
+    }));
     setArtifactInput('');
     setArtifactVisibility(false);
     setShowArtifactModal(false);
@@ -352,39 +384,97 @@ const App: React.FC = () => {
 
   const handleAddTodo = () => {
     if (todoInput.trim()) {
-      setTodos(prev => [{ text: todoInput.trim(), completed: false }, ...prev]);
+      const today = getTodayKey();
+      setDailyData(prev => ({
+        ...prev,
+        [today]: {
+          ...prev[today],
+          artifacts: prev[today]?.artifacts || [],
+          todos: [{ text: todoInput.trim(), completed: false }, ...(prev[today]?.todos || [])]
+        }
+      }));
       setTodoInput('');
     }
   };
 
   const handleToggleTodo = (idx: number) => {
-    setTodos(prev => prev.map((todo, i) => i === idx ? { ...todo, completed: !todo.completed } : todo));
+    // Only allow toggling todos for today
+    if (selectedDate !== getTodayKey()) return;
+    
+    const today = getTodayKey();
+    setDailyData(prev => ({
+      ...prev,
+      [today]: {
+        ...prev[today],
+        artifacts: prev[today]?.artifacts || [],
+        todos: (prev[today]?.todos || []).map((todo, i) => i === idx ? { ...todo, completed: !todo.completed } : todo)
+      }
+    }));
   };
 
   const handleDeleteTodo = (idx: number) => {
-    setTodos(prev => prev.filter((_, i) => i !== idx));
+    // Only allow deleting todos for today
+    if (selectedDate !== getTodayKey()) return;
+    
+    const today = getTodayKey();
+    setDailyData(prev => ({
+      ...prev,
+      [today]: {
+        ...prev[today],
+        artifacts: prev[today]?.artifacts || [],
+        todos: (prev[today]?.todos || []).filter((_, i) => i !== idx)
+      }
+    }));
   };
 
   const handleDeleteArtifact = (idx: number) => {
-    setArtifacts(prev => prev.filter((_, i) => i !== idx));
+    // Only allow deleting artifacts for today
+    if (selectedDate !== getTodayKey()) return;
+    
+    setDailyData(prev => ({
+      ...prev,
+      [selectedDate]: {
+        ...prev[selectedDate],
+        artifacts: (prev[selectedDate]?.artifacts || []).filter((_, i) => i !== idx),
+        todos: prev[selectedDate]?.todos || []
+      }
+    }));
   };
 
   const handleDownloadStats = () => {
-    const exportData = artifacts.map((item, idx) => ({
-      session: artifacts.length - idx,
-      task: item.task || null,
-      artifact: item.text,
-      timestamp: new Date(item.timestamp).toISOString()
-    }));
+    // Export data for the selected date or all dates
+    const isToday = selectedDate === getTodayKey();
+    let exportData;
+    let filename;
+    
+    if (isToday && selectedDate === getTodayKey()) {
+      // Export today's data
+      exportData = artifacts.map((item, idx) => ({
+        session: artifacts.length - idx,
+        date: selectedDate,
+        task: item.task || null,
+        artifact: item.text,
+        timestamp: new Date(item.timestamp).toISOString()
+      }));
+      filename = `pomodoro-stats-${selectedDate}.json`;
+    } else {
+      // Export selected date data
+      exportData = artifacts.map((item, idx) => ({
+        session: artifacts.length - idx,
+        date: selectedDate,
+        task: item.task || null,
+        artifact: item.text,
+        timestamp: new Date(item.timestamp).toISOString()
+      }));
+      filename = `pomodoro-stats-${selectedDate}.json`;
+    }
     
     const dataStr = JSON.stringify(exportData, null, 2);
     const dataUri = 'data:application/json;charset=utf-8,'+ encodeURIComponent(dataStr);
     
-    const exportFileDefaultName = `pomodoro-stats-${new Date().toISOString().split('T')[0]}.json`;
-    
     const linkElement = document.createElement('a');
     linkElement.setAttribute('href', dataUri);
-    linkElement.setAttribute('download', exportFileDefaultName);
+    linkElement.setAttribute('download', filename);
     linkElement.click();
   };
 
@@ -500,27 +590,46 @@ const App: React.FC = () => {
           )}
           {currentPage === 'todo' && (
             <div style={{ width: '600px', maxWidth: '90%', margin: '40px auto', background: 'rgba(255,255,255,0.04)', borderRadius: 16, padding: 32 }}>
-              <Input.Group compact>
-                <Input.TextArea
-                  style={{ width: 'calc(100% - 40px)' }}
-                  value={todoInput}
-                  onChange={e => setTodoInput(e.target.value)}
-                  onPressEnter={(e) => {
-                    if (e.ctrlKey || e.metaKey) {
-                      handleAddTodo();
-                    }
-                  }}
-                  placeholder="Add a new todo... (Ctrl+Enter to add)"
-                  rows={2}
-                  autoSize={{ minRows: 1, maxRows: 4 }}
+              <div style={{ marginBottom: 16, display: 'flex', justifyContent: 'space-between', alignItems: 'center', flexWrap: 'wrap', gap: 12 }}>
+                <DatePicker
+                  value={selectedDate ? dayjs(selectedDate) : null}
+                  onChange={(date) => setSelectedDate(date ? date.format('YYYY-MM-DD') : getTodayKey())}
+                  format="YYYY-MM-DD"
+                  placeholder="Select date"
+                  allowClear={false}
                 />
-                <Button type="primary" icon={<PlusOutlined />} onClick={handleAddTodo} />
-              </Input.Group>
+                <div style={{ color: '#fff', fontWeight: 500 }}>
+                  {selectedDate === getTodayKey() ? "Today's Todos" : `${selectedDate} Todos`}
+                </div>
+              </div>
+              {selectedDate === getTodayKey() && (
+                <Input.Group compact>
+                  <Input.TextArea
+                    style={{ width: 'calc(100% - 40px)' }}
+                    value={todoInput}
+                    onChange={e => setTodoInput(e.target.value)}
+                    onPressEnter={(e) => {
+                      if (e.ctrlKey || e.metaKey) {
+                        handleAddTodo();
+                      }
+                    }}
+                    placeholder="Add a new todo... (Ctrl+Enter to add)"
+                    rows={2}
+                    autoSize={{ minRows: 1, maxRows: 4 }}
+                  />
+                  <Button type="primary" icon={<PlusOutlined />} onClick={handleAddTodo} />
+                </Input.Group>
+              )}
+              {selectedDate !== getTodayKey() && (
+                <div style={{ color: '#fff', opacity: 0.7, textAlign: 'center', margin: '20px 0', fontStyle: 'italic' }}>
+                  Viewing past todos (read-only)
+                </div>
+              )}
               <List
                 dataSource={todos}
                 renderItem={(item, idx) => (
                   <List.Item
-                    actions={[
+                    actions={selectedDate === getTodayKey() ? [
                       <Popconfirm
                         title="Delete this todo?"
                         onConfirm={() => handleDeleteTodo(idx)}
@@ -529,10 +638,14 @@ const App: React.FC = () => {
                       >
                         <Button type="text" icon={<DeleteOutlined />} danger size="small" />
                       </Popconfirm>
-                    ]}
+                    ] : []}
                     style={{ paddingLeft: 0, paddingRight: 0 }}
                   >
-                    <Checkbox checked={item.completed} onChange={() => handleToggleTodo(idx)}>
+                    <Checkbox 
+                      checked={item.completed} 
+                      onChange={() => handleToggleTodo(idx)}
+                      disabled={selectedDate !== getTodayKey()}
+                    >
                       <span style={{ textDecoration: item.completed ? 'line-through' : 'none', color: item.completed ? '#aaa' : '#fff' }}>{item.text}</span>
                     </Checkbox>
                   </List.Item>
@@ -544,9 +657,18 @@ const App: React.FC = () => {
           {currentPage === 'stats' && (
             <div style={{ width: '600px', maxWidth: '90%', margin: '40px auto', background: 'rgba(255,255,255,0.95)', borderRadius: 16, padding: '32px 24px', boxShadow: '0 8px 32px rgba(0,0,0,0.1)' }}>
               <div style={{ fontWeight: 700, fontSize: 24, marginBottom: 16 }}>Pomodoro Progress</div>
-              <div style={{ marginBottom: 16, display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
-                <div>
-                  <strong>Total Pomodoros completed:</strong> {artifacts.length}
+              <div style={{ marginBottom: 16, display: 'flex', justifyContent: 'space-between', alignItems: 'center', flexWrap: 'wrap', gap: 12 }}>
+                <div style={{ display: 'flex', alignItems: 'center', gap: 12, flexWrap: 'wrap' }}>
+                  <DatePicker
+                    value={selectedDate ? dayjs(selectedDate) : null}
+                    onChange={(date) => setSelectedDate(date ? date.format('YYYY-MM-DD') : getTodayKey())}
+                    format="YYYY-MM-DD"
+                    placeholder="Select date"
+                    allowClear={false}
+                  />
+                  <div>
+                    <strong>{selectedDate === getTodayKey() ? "Today's" : `${selectedDate}'s`} Pomodoros:</strong> {artifacts.length}
+                  </div>
                 </div>
                 <Button 
                   type="primary" 
@@ -561,7 +683,7 @@ const App: React.FC = () => {
                 dataSource={artifacts}
                 renderItem={(item, idx) => (
                   <List.Item
-                    actions={[
+                    actions={selectedDate === getTodayKey() ? [
                       <Popconfirm
                         title="Delete this Pomodoro session?"
                         onConfirm={() => handleDeleteArtifact(idx)}
@@ -570,7 +692,7 @@ const App: React.FC = () => {
                       >
                         <Button type="text" icon={<DeleteOutlined />} danger size="small" />
                       </Popconfirm>
-                    ]}
+                    ] : []}
                   >
                     <div>
                       <strong>Session {artifacts.length - idx}</strong> <span style={{ color: '#666', fontSize: 12 }}>({item.timestamp})</span>
