@@ -199,7 +199,10 @@ const App: React.FC = () => {
 
   // Show modal when a work session completes
   const handleWorkSessionComplete = () => {
-    setShowArtifactModal(true);
+    // Double-check that we're actually in work mode before showing the modal
+    if (state.currentMode === 'work') {
+      setShowArtifactModal(true);
+    }
   };
 
   // Use the updated useTimer hook
