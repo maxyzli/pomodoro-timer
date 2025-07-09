@@ -214,6 +214,7 @@ const App: React.FC = () => {
     resetTimer,
     switchMode,
     updateSettings,
+    handlePostWorkSessionComplete,
   } = useTimer(handleWorkSessionComplete);
 
   // Add useEffect to update document.title with timer status
@@ -332,6 +333,9 @@ const App: React.FC = () => {
       setArtifactInput('');
       setArtifactVisibility(false);
       setShowArtifactModal(false);
+      
+      // Now handle auto-start break if enabled
+      handlePostWorkSessionComplete();
     }
   };
 
@@ -339,6 +343,9 @@ const App: React.FC = () => {
     setArtifactInput('');
     setArtifactVisibility(false);
     setShowArtifactModal(false);
+    
+    // Handle auto-start break if enabled (even when canceling)
+    handlePostWorkSessionComplete();
   };
 
   const progressPercentage = ((getTotalTimeForMode(state.currentMode) - state.timeLeft) / getTotalTimeForMode(state.currentMode)) * 100;

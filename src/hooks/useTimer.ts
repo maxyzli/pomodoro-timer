@@ -107,12 +107,7 @@ export const useTimer = (onWorkSessionComplete?: () => void) => {
         onWorkSessionComplete();
       }
 
-      // Auto-start break if enabled
-      if (settings.autoStartBreaks) {
-        setTimeout(() => {
-          setState(prev => ({ ...prev, isRunning: true }));
-        }, 1000);
-      }
+      // Don't auto-start break here - let the artifact modal completion handle it
     } else {
       setState(prev => ({
         ...prev,
@@ -207,6 +202,15 @@ export const useTimer = (onWorkSessionComplete?: () => void) => {
     }
   }, [settings, getTimeForMode, state.isRunning]);
 
+  const handlePostWorkSessionComplete = useCallback(() => {
+    // Auto-start break if enabled (called after artifact modal is closed)
+    if (settings.autoStartBreaks) {
+      setTimeout(() => {
+        setState(prev => ({ ...prev, isRunning: true }));
+      }, 1000);
+    }
+  }, [settings.autoStartBreaks]);
+
   return {
     state,
     settings,
@@ -215,5 +219,6 @@ export const useTimer = (onWorkSessionComplete?: () => void) => {
     resetTimer,
     switchMode,
     updateSettings,
+    handlePostWorkSessionComplete,
   };
 }; 
