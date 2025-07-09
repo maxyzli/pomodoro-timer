@@ -579,15 +579,11 @@ const App: React.FC = () => {
             </div>
           )}
           {currentPage === 'settings' && (
-            <div style={{ maxWidth: 800, margin: '24px auto', background: 'rgba(255,255,255,0.04)', borderRadius: 16, padding: 32, textAlign: 'center' }}>
-              <div style={{ textAlign: 'left' }}>
-                <SettingsPage
-                  settings={settings}
-                  onSave={handleSettingsSave}
-                  onCancel={handleSettingsCancel}
-                />
-              </div>
-            </div>
+            <SettingsPage
+              settings={settings}
+              onSave={handleSettingsSave}
+              onCancel={handleSettingsCancel}
+            />
           )}
           <Modal
             open={showArtifactModal}
