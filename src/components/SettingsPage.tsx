@@ -1,8 +1,6 @@
 import React, { useState } from 'react';
 import { Card, Form, InputNumber, Switch, Space, Typography, Button, Row, Col, Divider, Upload } from 'antd';
-import { SaveOutlined, CloseOutlined, CloudDownloadOutlined, UploadOutlined } from '@ant-design/icons';
-
-const { Title } = Typography;
+import { CloudDownloadOutlined, UploadOutlined } from '@ant-design/icons';
 
 interface SettingsPageProps {
   settings: {
@@ -24,7 +22,6 @@ interface SettingsPageProps {
 export const SettingsPage: React.FC<SettingsPageProps> = ({
   settings,
   onSave,
-  onCancel,
   onBackupExport,
   onBackupImport,
 }) => {
