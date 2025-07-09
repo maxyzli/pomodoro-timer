@@ -316,7 +316,15 @@ const App: React.FC = () => {
   };
 
   const handleArtifactSave = () => {
-    // Save the artifact (button is already disabled if conditions aren't met)
+    console.log('handleArtifactSave called', { artifactVisibility, artifactInput: artifactInput.trim() });
+    
+    // Only proceed if form is valid
+    if (!artifactVisibility || !artifactInput.trim()) {
+      console.log('Form invalid, not saving');
+      return;
+    }
+    
+    // Save the artifact
     setArtifacts(prev => [
       {
         session: state.completedSessions + 1,
