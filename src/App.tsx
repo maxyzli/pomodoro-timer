@@ -270,14 +270,11 @@ const App: React.FC = () => {
   };
 
   const handleStartClick = () => {
-    // Only show focus modal if timer is not running and current mode is work
     if (!state.isRunning) {
       if (state.currentMode === 'work') {
-        console.log('Opening focus modal for work session');
         setShowFocusModal(true);
       } else {
         // For breaks, start timer directly without focus modal
-        console.log('Starting break session directly');
         startTimer();
       }
     }
@@ -425,12 +422,16 @@ const App: React.FC = () => {
           {currentFocusTask}
         </CurrentTask>
       )}
-      {!state.isRunning ? (
+      {!state.isRunning && (
+        (state.currentMode === 'work' && state.timeLeft === settings.workTime * 60) ||
+        (state.currentMode === 'short-break' && state.timeLeft === settings.shortBreakTime * 60) ||
+        (state.currentMode === 'long-break' && state.timeLeft === settings.longBreakTime * 60)
+      ) ? (
         <StartButton onClick={handleStartClick}>START</StartButton>
       ) : (
         <Space size="large" style={{ margin: '32px 0 24px 0' }}>
-          <Button size="large" icon={<PauseCircleOutlined />} onClick={pauseTimer}>
-            Pause
+          <Button size="large" icon={state.isRunning ? <PauseCircleOutlined /> : <PlayCircleOutlined />} onClick={state.isRunning ? pauseTimer : startTimer}>
+            {state.isRunning ? 'Pause' : 'Resume'}
           </Button>
           <Button size="large" icon={<ReloadOutlined />} onClick={handleTimerReset}>
             Reset

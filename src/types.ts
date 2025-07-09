@@ -14,6 +14,7 @@ export interface TimerSettings {
 export interface TimerState {
   timeLeft: number;
   isRunning: boolean;
+  isPaused: boolean;
   currentMode: TimerMode;
   completedSessions: number;
   totalSessions: number;

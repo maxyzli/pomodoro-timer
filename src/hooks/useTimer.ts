@@ -29,6 +29,7 @@ export const useTimer = (onWorkSessionComplete?: () => void) => {
   const [state, setState] = useState<TimerState>({
     timeLeft: settings.workTime * 60,
     isRunning: false,
+    isPaused: false,
     currentMode: 'work',
     completedSessions: 0,
     totalSessions: settings.longBreakInterval,
@@ -100,6 +101,8 @@ export const useTimer = (onWorkSessionComplete?: () => void) => {
         completedSessions: newCompletedSessions,
         currentMode: shouldTakeLongBreak ? 'long-break' : 'short-break',
         timeLeft: getTimeForMode(shouldTakeLongBreak ? 'long-break' : 'short-break'),
+        isRunning: false,
+        isPaused: false,
       }));
 
       // Trigger artifact modal callback
@@ -113,6 +116,8 @@ export const useTimer = (onWorkSessionComplete?: () => void) => {
         ...prev,
         currentMode: 'work',
         timeLeft: getTimeForMode('work'),
+        isRunning: false,
+        isPaused: false,
       }));
 
       // Auto-start pomodoro if enabled
@@ -127,15 +132,20 @@ export const useTimer = (onWorkSessionComplete?: () => void) => {
   const startTimer = useCallback(() => {
     if (state.isRunning) return;
 
-    setState(prev => ({ ...prev, isRunning: true }));
+    setState(prev => ({ ...prev, isRunning: true, isPaused: false }));
 
     timerRef.current = setInterval(() => {
       setState(prev => {
         const newTimeLeft = prev.timeLeft - 1;
         
         if (newTimeLeft <= 0) {
+          // Clear the interval before calling completeTimer
+          if (timerRef.current) {
+            clearInterval(timerRef.current);
+            timerRef.current = null;
+          }
           completeTimer();
-          return prev;
+          return { ...prev, isRunning: false, isPaused: false };
         }
         
         return { ...prev, timeLeft: newTimeLeft };
@@ -146,7 +156,7 @@ export const useTimer = (onWorkSessionComplete?: () => void) => {
   const pauseTimer = useCallback(() => {
     if (!state.isRunning) return;
 
-    setState(prev => ({ ...prev, isRunning: false }));
+    setState(prev => ({ ...prev, isRunning: false, isPaused: true }));
     
     if (timerRef.current) {
       clearInterval(timerRef.current);
@@ -155,21 +165,33 @@ export const useTimer = (onWorkSessionComplete?: () => void) => {
   }, [state.isRunning]);
 
   const resetTimer = useCallback(() => {
-    pauseTimer();
     setState(prev => ({
       ...prev,
+      isRunning: false,
+      isPaused: false,
       timeLeft: getTimeForMode(prev.currentMode),
     }));
-  }, [pauseTimer, getTimeForMode]);
+    
+    if (timerRef.current) {
+      clearInterval(timerRef.current);
+      timerRef.current = null;
+    }
+  }, [getTimeForMode]);
 
   const switchMode = useCallback((mode: TimerMode) => {
-    pauseTimer();
     setState(prev => ({
       ...prev,
+      isRunning: false,
+      isPaused: false,
       currentMode: mode,
       timeLeft: getTimeForMode(mode),
     }));
-  }, [pauseTimer, getTimeForMode]);
+    
+    if (timerRef.current) {
+      clearInterval(timerRef.current);
+      timerRef.current = null;
+    }
+  }, [getTimeForMode]);
 
   const updateSettings = useCallback((newSettings: Partial<TimerSettings>) => {
     const updatedSettings = { ...settings, ...newSettings };
@@ -179,7 +201,7 @@ export const useTimer = (onWorkSessionComplete?: () => void) => {
     setState(prev => ({
       ...prev,
       totalSessions: updatedSettings.longBreakInterval,
-      timeLeft: getTimeForMode(prev.currentMode),
+      timeLeft: prev.isPaused ? prev.timeLeft : getTimeForMode(prev.currentMode),
     }));
   }, [settings, getTimeForMode]);
 
@@ -192,15 +214,15 @@ export const useTimer = (onWorkSessionComplete?: () => void) => {
     };
   }, []);
 
-  // Update timeLeft when settings change
+  // Update timeLeft when settings change (but not when paused)
   useEffect(() => {
-    if (!state.isRunning) {
+    if (!state.isRunning && !state.isPaused) {
       setState(prev => ({
         ...prev,
         timeLeft: getTimeForMode(prev.currentMode),
       }));
     }
-  }, [settings, getTimeForMode, state.isRunning]);
+  }, [settings, getTimeForMode, state.isRunning, state.isPaused]);
 
   const handlePostWorkSessionComplete = useCallback(() => {
     // Auto-start break if enabled (called after artifact modal is closed)
