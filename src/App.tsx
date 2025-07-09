@@ -318,16 +318,16 @@ const App: React.FC = () => {
   const handleArtifactSave = () => {
     console.log('handleArtifactSave called', { artifactVisibility, artifactInput: artifactInput.trim() });
     
-    // Only proceed if form is valid
-    if (!artifactVisibility || !artifactInput.trim()) {
-      console.log('Form invalid, not saving');
+    // Only proceed if checkbox is checked (allow empty artifact text)
+    if (!artifactVisibility) {
+      console.log('Checkbox not checked, not saving');
       return;
     }
     
     // Save the artifact
     setArtifacts(prev => [
       {
-        text: artifactInput,
+        text: artifactInput.trim() || '(No artifact description)',
         timestamp: new Date().toLocaleString(),
         visibility: artifactVisibility,
         task: currentFocusTask,
@@ -596,7 +596,7 @@ const App: React.FC = () => {
             onCancel={handleArtifactCancel}
             okText="Save"
             cancelButtonProps={{ style: { display: 'none' } }}
-            okButtonProps={{ disabled: !artifactVisibility || !artifactInput.trim() }}
+            okButtonProps={{ disabled: !artifactVisibility }}
           >
             {currentFocusTask && (
               <div style={{ marginBottom: 12, fontWeight: 500 }}>
