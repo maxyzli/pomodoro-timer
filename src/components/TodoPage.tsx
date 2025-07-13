@@ -2,7 +2,7 @@ import React, { useState } from 'react';
 import { DatePicker, Input, Button, List, Popconfirm, Checkbox } from 'antd';
 import { PlusOutlined, DeleteOutlined, LeftOutlined, RightOutlined } from '@ant-design/icons';
 import dayjs from 'dayjs';
-import { PageContainer } from '../styles/Layout.styles';
+import { StatsPageContainer } from '../styles/Layout.styles';
 import { Todo } from '../hooks/useDailyData';
 
 interface TodoPageProps {
@@ -54,7 +54,7 @@ export const TodoPage: React.FC<TodoPageProps> = ({
   const canGoNext = !dayjs(selectedDate).isSame(dayjs(getTodayKey()), 'day');
 
   return (
-    <PageContainer>
+    <StatsPageContainer>
       <div style={{ marginBottom: 16, display: 'flex', justifyContent: 'space-between', alignItems: 'center', flexWrap: 'wrap', gap: 12 }}>
         <div style={{ display: 'flex', alignItems: 'center', gap: 8 }}>
           <Button 
@@ -78,7 +78,7 @@ export const TodoPage: React.FC<TodoPageProps> = ({
             title="Next day"
           />
         </div>
-        <div style={{ color: '#fff', fontWeight: 500 }}>
+        <div style={{ color: '#333', fontWeight: 500 }}>
           {isToday ? "Today's Todos" : `${selectedDate} Todos`}
         </div>
       </div>
@@ -103,7 +103,7 @@ export const TodoPage: React.FC<TodoPageProps> = ({
       )}
       
       {!isToday && (
-        <div style={{ color: '#fff', opacity: 0.7, textAlign: 'center', margin: '20px 0', fontStyle: 'italic' }}>
+        <div style={{ color: '#666', textAlign: 'center', margin: '20px 0', fontStyle: 'italic' }}>
           Viewing past todos (read-only)
         </div>
       )}
@@ -131,7 +131,7 @@ export const TodoPage: React.FC<TodoPageProps> = ({
             >
               <span style={{ 
                 textDecoration: item.completed ? 'line-through' : 'none', 
-                color: item.completed ? '#aaa' : '#fff' 
+                color: item.completed ? '#aaa' : '#333' 
               }}>
                 {item.text}
               </span>
@@ -140,6 +140,6 @@ export const TodoPage: React.FC<TodoPageProps> = ({
         )}
         style={{ marginTop: 16 }}
       />
-    </PageContainer>
+    </StatsPageContainer>
   );
 };
