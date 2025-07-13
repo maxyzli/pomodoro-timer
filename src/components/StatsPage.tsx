@@ -27,7 +27,7 @@ export const StatsPage: React.FC<StatsPageProps> = ({
   return (
     <StatsPageContainer>
       <div style={{ fontWeight: 700, fontSize: 24, marginBottom: 16 }}>
-        Pomodoro Progress
+        Work Log
       </div>
       
       <div style={{ marginBottom: 16, display: 'flex', justifyContent: 'space-between', alignItems: 'center', flexWrap: 'wrap', gap: 12 }}>
@@ -40,7 +40,7 @@ export const StatsPage: React.FC<StatsPageProps> = ({
             allowClear={false}
           />
           <div>
-            <strong>{isToday ? "Today's" : `${selectedDate}'s`} Pomodoros:</strong> {artifacts.length}
+            <strong>{isToday ? "Today's" : `${selectedDate}'s`} Sessions:</strong> {artifacts.length}
           </div>
         </div>
         <Button 
@@ -49,7 +49,7 @@ export const StatsPage: React.FC<StatsPageProps> = ({
           onClick={onDownloadStats}
           disabled={artifacts.length === 0}
         >
-          Download Stats
+          Download Log
         </Button>
       </div>
       
@@ -59,7 +59,7 @@ export const StatsPage: React.FC<StatsPageProps> = ({
           <List.Item
             actions={isToday ? [
               <Popconfirm
-                title="Delete this Pomodoro session?"
+                title="Delete this work session?"
                 onConfirm={() => onDeleteArtifact(idx)}
                 okText="Yes"
                 cancelText="No"

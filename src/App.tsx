@@ -17,7 +17,7 @@ const { Content } = Layout;
 const NAV_ITEMS = [
   { key: 'timer', icon: <ClockCircleOutlined />, label: 'Timer' },
   { key: 'todo', icon: <UnorderedListOutlined />, label: 'Todo' },
-  { key: 'stats', icon: <BarChartOutlined />, label: 'Stats' },
+  { key: 'stats', icon: <BarChartOutlined />, label: 'Work Log' },
   { key: 'settings', icon: <SettingOutlined />, label: 'Settings' },
 ];
 
@@ -171,7 +171,7 @@ const App: React.FC = () => {
   };
 
 
-  const handleDownloadStats = () => {
+  const handleDownloadWorkLog = () => {
     const exportData = artifacts.map((item, idx) => ({
       session: artifacts.length - idx,
       date: selectedDate,
@@ -180,7 +180,7 @@ const App: React.FC = () => {
       timestamp: new Date(item.timestamp).toISOString()
     }));
     
-    const filename = `pomodoro-stats-${selectedDate}.json`;
+    const filename = `work-log-${selectedDate}.json`;
     const dataStr = JSON.stringify(exportData, null, 2);
     const dataUri = 'data:application/json;charset=utf-8,'+ encodeURIComponent(dataStr);
     
@@ -250,7 +250,7 @@ const App: React.FC = () => {
             artifacts={artifacts}
             getTodayKey={getTodayKey}
             onDateChange={setSelectedDate}
-            onDownloadStats={handleDownloadStats}
+            onDownloadStats={handleDownloadWorkLog}
             onDeleteArtifact={deleteArtifact}
           />
         )}
