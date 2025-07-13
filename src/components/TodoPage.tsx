@@ -55,6 +55,10 @@ export const TodoPage: React.FC<TodoPageProps> = ({
 
   return (
     <StatsPageContainer>
+      <div style={{ fontWeight: 700, fontSize: 24, marginBottom: 16 }}>
+        Todo
+      </div>
+      
       <div style={{ marginBottom: 16, display: 'flex', justifyContent: 'space-between', alignItems: 'center', flexWrap: 'wrap', gap: 12 }}>
         <div style={{ display: 'flex', alignItems: 'center', gap: 8 }}>
           <Button 
