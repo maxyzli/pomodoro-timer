@@ -1,6 +1,6 @@
 import React, { useState } from 'react';
 import { DatePicker, Input, Button, List, Popconfirm, Checkbox } from 'antd';
-import { PlusOutlined, DeleteOutlined } from '@ant-design/icons';
+import { PlusOutlined, DeleteOutlined, LeftOutlined, RightOutlined } from '@ant-design/icons';
 import dayjs from 'dayjs';
 import { PageContainer } from '../styles/Layout.styles';
 import { Todo } from '../hooks/useDailyData';
@@ -33,18 +33,51 @@ export const TodoPage: React.FC<TodoPageProps> = ({
     }
   };
 
+  const handlePreviousDay = () => {
+    const currentDate = dayjs(selectedDate);
+    const previousDate = currentDate.subtract(1, 'day');
+    onDateChange(previousDate.format('YYYY-MM-DD'));
+  };
+
+  const handleNextDay = () => {
+    const currentDate = dayjs(selectedDate);
+    const nextDate = currentDate.add(1, 'day');
+    const today = dayjs(getTodayKey());
+    
+    // Don't allow navigation beyond today
+    if (nextDate.isAfter(today)) return;
+    
+    onDateChange(nextDate.format('YYYY-MM-DD'));
+  };
+
   const isToday = selectedDate === getTodayKey();
+  const canGoNext = !dayjs(selectedDate).isSame(dayjs(getTodayKey()), 'day');
 
   return (
     <PageContainer>
       <div style={{ marginBottom: 16, display: 'flex', justifyContent: 'space-between', alignItems: 'center', flexWrap: 'wrap', gap: 12 }}>
-        <DatePicker
-          value={selectedDate ? dayjs(selectedDate) : null}
-          onChange={(date) => onDateChange(date ? date.format('YYYY-MM-DD') : getTodayKey())}
-          format="YYYY-MM-DD"
-          placeholder="Select date"
-          allowClear={false}
-        />
+        <div style={{ display: 'flex', alignItems: 'center', gap: 8 }}>
+          <Button 
+            icon={<LeftOutlined />} 
+            onClick={handlePreviousDay}
+            size="small"
+            title="Previous day"
+          />
+          <DatePicker
+            value={selectedDate ? dayjs(selectedDate) : null}
+            onChange={(date) => onDateChange(date ? date.format('YYYY-MM-DD') : getTodayKey())}
+            format="YYYY-MM-DD"
+            placeholder="Select date"
+            allowClear={false}
+          />
+          <Button 
+            icon={<RightOutlined />} 
+            onClick={handleNextDay}
+            disabled={!canGoNext}
+            size="small"
+            title="Next day"
+          />
+        </div>
         <div style={{ color: '#fff', fontWeight: 500 }}>
           {isToday ? "Today's Todos" : `${selectedDate} Todos`}
         </div>

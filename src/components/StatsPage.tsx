@@ -1,6 +1,6 @@
 import React from 'react';
 import { DatePicker, Button, List, Popconfirm } from 'antd';
-import { DownloadOutlined, DeleteOutlined } from '@ant-design/icons';
+import { DownloadOutlined, DeleteOutlined, LeftOutlined, RightOutlined } from '@ant-design/icons';
 import dayjs from 'dayjs';
 import { StatsPageContainer } from '../styles/Layout.styles';
 import { Artifact } from '../hooks/useDailyData';
@@ -24,6 +24,25 @@ export const StatsPage: React.FC<StatsPageProps> = ({
 }) => {
   const isToday = selectedDate === getTodayKey();
 
+  const handlePreviousDay = () => {
+    const currentDate = dayjs(selectedDate);
+    const previousDate = currentDate.subtract(1, 'day');
+    onDateChange(previousDate.format('YYYY-MM-DD'));
+  };
+
+  const handleNextDay = () => {
+    const currentDate = dayjs(selectedDate);
+    const nextDate = currentDate.add(1, 'day');
+    const today = dayjs(getTodayKey());
+    
+    // Don't allow navigation beyond today
+    if (nextDate.isAfter(today)) return;
+    
+    onDateChange(nextDate.format('YYYY-MM-DD'));
+  };
+
+  const canGoNext = !dayjs(selectedDate).isSame(dayjs(getTodayKey()), 'day');
+
   return (
     <StatsPageContainer>
       <div style={{ fontWeight: 700, fontSize: 24, marginBottom: 16 }}>
@@ -32,13 +51,28 @@ export const StatsPage: React.FC<StatsPageProps> = ({
       
       <div style={{ marginBottom: 16, display: 'flex', justifyContent: 'space-between', alignItems: 'center', flexWrap: 'wrap', gap: 12 }}>
         <div style={{ display: 'flex', alignItems: 'center', gap: 12, flexWrap: 'wrap' }}>
-          <DatePicker
-            value={selectedDate ? dayjs(selectedDate) : null}
-            onChange={(date) => onDateChange(date ? date.format('YYYY-MM-DD') : getTodayKey())}
-            format="YYYY-MM-DD"
-            placeholder="Select date"
-            allowClear={false}
-          />
+          <div style={{ display: 'flex', alignItems: 'center', gap: 8 }}>
+            <Button 
+              icon={<LeftOutlined />} 
+              onClick={handlePreviousDay}
+              size="small"
+              title="Previous day"
+            />
+            <DatePicker
+              value={selectedDate ? dayjs(selectedDate) : null}
+              onChange={(date) => onDateChange(date ? date.format('YYYY-MM-DD') : getTodayKey())}
+              format="YYYY-MM-DD"
+              placeholder="Select date"
+              allowClear={false}
+            />
+            <Button 
+              icon={<RightOutlined />} 
+              onClick={handleNextDay}
+              disabled={!canGoNext}
+              size="small"
+              title="Next day"
+            />
+          </div>
           <div>
             <strong>{isToday ? "Today's" : `${selectedDate}'s`} Sessions:</strong> {artifacts.length}
           </div>
