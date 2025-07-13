@@ -72,6 +72,7 @@ const App: React.FC = () => {
     switchMode,
     updateSettings,
     handlePostWorkSessionComplete,
+    stopNotification,
   } = useTimer(handleWorkSessionComplete);
 
   // Add useEffect to update document.title with timer status
@@ -139,6 +140,9 @@ const App: React.FC = () => {
       return;
     }
     
+    // Stop the notification sound
+    stopNotification();
+    
     // Save the artifact using the custom hook
     addArtifact({
       text: artifactInput.trim() || '(No artifact description)',
@@ -155,6 +159,9 @@ const App: React.FC = () => {
   };
 
   const handleArtifactCancel = () => {
+    // Stop the notification sound
+    stopNotification();
+    
     setArtifactInput('');
     setArtifactVisibility(false);
     setShowArtifactModal(false);

@@ -36,6 +36,7 @@ export const useTimer = (onWorkSessionComplete?: () => void) => {
   });
 
   const timerRef = useRef<number | null>(null);
+  const notificationIntervalRef = useRef<number | null>(null);
 
   const getTimeForMode = useCallback((mode: TimerMode): number => {
     switch (mode) {
@@ -51,27 +52,42 @@ export const useTimer = (onWorkSessionComplete?: () => void) => {
   const playNotification = useCallback(() => {
     if (!settings.soundEnabled) return;
     
-    try {
-      const audioContext = new (window.AudioContext || (window as any).webkitAudioContext)();
-      const oscillator = audioContext.createOscillator();
-      const gainNode = audioContext.createGain();
+    const playSound = () => {
+      try {
+        const audioContext = new (window.AudioContext || (window as any).webkitAudioContext)();
+        const oscillator = audioContext.createOscillator();
+        const gainNode = audioContext.createGain();
 
-      oscillator.connect(gainNode);
-      gainNode.connect(audioContext.destination);
+        oscillator.connect(gainNode);
+        gainNode.connect(audioContext.destination);
 
-      oscillator.frequency.setValueAtTime(800, audioContext.currentTime);
-      oscillator.frequency.setValueAtTime(600, audioContext.currentTime + 0.1);
-      oscillator.frequency.setValueAtTime(800, audioContext.currentTime + 0.2);
+        oscillator.frequency.setValueAtTime(800, audioContext.currentTime);
+        oscillator.frequency.setValueAtTime(600, audioContext.currentTime + 0.1);
+        oscillator.frequency.setValueAtTime(800, audioContext.currentTime + 0.2);
 
-      gainNode.gain.setValueAtTime(0.3, audioContext.currentTime);
-      gainNode.gain.exponentialRampToValueAtTime(0.01, audioContext.currentTime + 0.3);
+        gainNode.gain.setValueAtTime(0.3, audioContext.currentTime);
+        gainNode.gain.exponentialRampToValueAtTime(0.01, audioContext.currentTime + 0.3);
 
-      oscillator.start(audioContext.currentTime);
-      oscillator.stop(audioContext.currentTime + 0.3);
-    } catch (error) {
-      console.log('Audio notification failed:', error);
-    }
+        oscillator.start(audioContext.currentTime);
+        oscillator.stop(audioContext.currentTime + 0.3);
+      } catch (error) {
+        console.log('Audio notification failed:', error);
+      }
+    };
+
+    // Play sound immediately
+    playSound();
+    
+    // Start repeating the sound every 3 seconds
+    notificationIntervalRef.current = setInterval(playSound, 3000);
   }, [settings.soundEnabled]);
+
+  const stopNotification = useCallback(() => {
+    if (notificationIntervalRef.current) {
+      clearInterval(notificationIntervalRef.current);
+      notificationIntervalRef.current = null;
+    }
+  }, []);
 
   const showNotification = useCallback((mode: TimerMode) => {
     if (!settings.notificationsEnabled) return;
@@ -205,11 +221,14 @@ export const useTimer = (onWorkSessionComplete?: () => void) => {
     }));
   }, [settings, getTimeForMode]);
 
-  // Cleanup timer on unmount
+  // Cleanup timer and notification on unmount
   useEffect(() => {
     return () => {
       if (timerRef.current) {
         clearInterval(timerRef.current);
+      }
+      if (notificationIntervalRef.current) {
+        clearInterval(notificationIntervalRef.current);
       }
     };
   }, []);
@@ -242,5 +261,6 @@ export const useTimer = (onWorkSessionComplete?: () => void) => {
     switchMode,
     updateSettings,
     handlePostWorkSessionComplete,
+    stopNotification,
   };
 }; 
