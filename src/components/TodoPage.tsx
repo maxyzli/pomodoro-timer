@@ -86,16 +86,16 @@ export const TodoPage: React.FC<TodoPageProps> = ({
 
   const filteredTodos = filterCategory === 'all' 
     ? todos 
-    : todos.filter(todo => todo.category === filterCategory);
+    : todos.filter(todo => todo.category === filterCategory && !todo.completed);
 
   // Only limit DO category to 3 todos total (completed or not)
   const maxDoTodos = 3;
   const totalDoCount = todos.filter(todo => todo.category === 'do').length;
   
-  // Count todos by category
+  // Count todos by category - categories only count uncompleted todos, All counts everything
   const getCategoryCount = (category: EisenhowerCategory | 'all') => {
     if (category === 'all') return todos.length;
-    return todos.filter(todo => todo.category === category).length;
+    return todos.filter(todo => todo.category === category && !todo.completed).length;
   };
   
 
