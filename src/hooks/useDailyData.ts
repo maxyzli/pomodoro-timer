@@ -8,6 +8,7 @@ export interface Artifact {
 }
 
 export interface Todo {
+  id: string;
   text: string;
   completed: boolean;
 }
@@ -46,6 +47,7 @@ const saveDailyData = (data: DailyData) => {
 export const useDailyData = () => {
   const [dailyData, setDailyData] = useState<DailyData>(() => {
     const data = loadDailyData();
+    
     // Migrate old data if it exists
     const oldArtifacts = localStorage.getItem('pomodoroArtifacts');
     const oldTodos = localStorage.getItem('pomodoroTodos');
@@ -59,6 +61,28 @@ export const useDailyData = () => {
       localStorage.removeItem('pomodoroArtifacts');
       localStorage.removeItem('pomodoroTodos');
     }
+    
+    // Migrate todos to add IDs if they don't have them
+    let needsSave = false;
+    Object.keys(data).forEach(dateKey => {
+      if (data[dateKey].todos) {
+        data[dateKey].todos = data[dateKey].todos.map((todo: any) => {
+          if (!todo.id) {
+            needsSave = true;
+            return {
+              ...todo,
+              id: `todo-${Date.now()}-${Math.random().toString(36).substr(2, 9)}`
+            };
+          }
+          return todo;
+        });
+      }
+    });
+    
+    if (needsSave) {
+      saveDailyData(data);
+    }
+    
     return data;
   });
 
@@ -106,12 +130,18 @@ export const useDailyData = () => {
 
   const addTodo = useCallback((text: string) => {
     const today = getTodayKey();
+    const newTodo: Todo = {
+      id: `todo-${Date.now()}-${Math.random().toString(36).substr(2, 9)}`,
+      text: text.trim(),
+      completed: false
+    };
+    
     setDailyData(prev => ({
       ...prev,
       [today]: {
         ...prev[today],
         artifacts: prev[today]?.artifacts || [],
-        todos: [{ text: text.trim(), completed: false }, ...(prev[today]?.todos || [])]
+        todos: [newTodo, ...(prev[today]?.todos || [])]
       }
     }));
   }, []);
@@ -146,6 +176,26 @@ export const useDailyData = () => {
     }));
   }, [selectedDate]);
 
+  const reorderTodos = useCallback((startIndex: number, endIndex: number) => {
+    if (selectedDate !== getTodayKey()) return;
+    
+    const today = getTodayKey();
+    setDailyData(prev => {
+      const todos = [...(prev[today]?.todos || [])];
+      const [reorderedItem] = todos.splice(startIndex, 1);
+      todos.splice(endIndex, 0, reorderedItem);
+      
+      return {
+        ...prev,
+        [today]: {
+          ...prev[today],
+          artifacts: prev[today]?.artifacts || [],
+          todos
+        }
+      };
+    });
+  }, [selectedDate]);
+
   return {
     dailyData,
     setDailyData,
@@ -157,6 +207,7 @@ export const useDailyData = () => {
     addTodo,
     toggleTodo,
     deleteTodo,
+    reorderTodos,
     getTodayKey,
   };
 };
