@@ -1,5 +1,5 @@
 import React, { useState } from 'react';
-import { DatePicker, Input, Button, Popconfirm, Checkbox, Select, Tag, Segmented, Modal, Card } from 'antd';
+import { DatePicker, Input, Button, Popconfirm, Checkbox, Select, Tag, Segmented, Modal, Card, Tooltip } from 'antd';
 import { PlusOutlined, DeleteOutlined, LeftOutlined, RightOutlined, MenuOutlined } from '@ant-design/icons';
 import dayjs from 'dayjs';
 import { StatsPageContainer } from '../styles/Layout.styles';
@@ -77,6 +77,19 @@ export const TodoPage: React.FC<TodoPageProps> = ({
   const filteredTodos = filterCategory === 'all' 
     ? todos 
     : todos.filter(todo => todo.category === filterCategory);
+
+  // Only limit DO category to 3 todos total (completed or not)
+  const maxDoTodos = 3;
+  const totalDoCount = todos.filter(todo => todo.category === 'do').length;
+  
+
+  const getDoStatus = () => {
+    return {
+      count: totalDoCount,
+      isAtLimit: totalDoCount >= maxDoTodos,
+      remaining: maxDoTodos - totalDoCount
+    };
+  };
 
   const handlePreviousDay = () => {
     const currentDate = dayjs(selectedDate);
@@ -179,6 +192,7 @@ export const TodoPage: React.FC<TodoPageProps> = ({
           Viewing past todos (read-only)
         </div>
       )}
+
 
       <div style={{ marginBottom: 16 }}>
         <div style={{ marginBottom: 8, fontWeight: 500, color: '#666' }}>Filter by Category:</div>
@@ -286,12 +300,24 @@ export const TodoPage: React.FC<TodoPageProps> = ({
               )}
               <div style={{ flex: 1 }}>
                 <div style={{ display: 'flex', alignItems: 'center', marginBottom: 4 }}>
-                  <Checkbox 
-                    checked={item.completed} 
-                    onChange={() => onToggleTodo(originalIndex)}
-                    disabled={!isToday}
-                    style={{ marginRight: 8 }}
-                  />
+                  <Tooltip 
+                    title={
+                      !isToday 
+                        ? "Past todos are read-only" 
+                        : ""
+                    }
+                    placement="top"
+                  >
+                    <Checkbox 
+                      checked={item.completed} 
+                      onChange={() => onToggleTodo(originalIndex)}
+                      disabled={!isToday}
+                      style={{ 
+                        marginRight: 8,
+                        opacity: !isToday ? 0.5 : 1
+                      }}
+                    />
+                  </Tooltip>
                   <span style={{ 
                     textDecoration: item.completed ? 'line-through' : 'none', 
                     color: item.completed ? '#aaa' : '#333',
@@ -357,69 +383,70 @@ export const TodoPage: React.FC<TodoPageProps> = ({
         </div>
 
         <div style={{ display: 'grid', gap: 12 }}>
-          <Card
-            hoverable
-            onClick={() => handleCategorySelection('do')}
-            style={{ cursor: 'pointer', borderColor: getCategoryColor('do') }}
-          >
-            <div style={{ display: 'flex', alignItems: 'center', gap: 12 }}>
-              <Tag color={getCategoryColor('do')} style={{ margin: 0, fontSize: 16, padding: '4px 8px' }}>
-                🔥 DO
-              </Tag>
-              <div>
-                <div style={{ fontWeight: 'bold', color: '#333' }}>Urgent + Important</div>
-                <div style={{ color: '#666', fontSize: 14 }}>Crises, emergencies, deadline-driven projects</div>
-              </div>
-            </div>
-          </Card>
-
-          <Card
-            hoverable
-            onClick={() => handleCategorySelection('schedule')}
-            style={{ cursor: 'pointer', borderColor: getCategoryColor('schedule') }}
-          >
-            <div style={{ display: 'flex', alignItems: 'center', gap: 12 }}>
-              <Tag color={getCategoryColor('schedule')} style={{ margin: 0, fontSize: 16, padding: '4px 8px' }}>
-                📅 SCHEDULE
-              </Tag>
-              <div>
-                <div style={{ fontWeight: 'bold', color: '#333' }}>Important, Not Urgent</div>
-                <div style={{ color: '#666', fontSize: 14 }}>Prevention, planning, development, research</div>
-              </div>
-            </div>
-          </Card>
-
-          <Card
-            hoverable
-            onClick={() => handleCategorySelection('delegate')}
-            style={{ cursor: 'pointer', borderColor: getCategoryColor('delegate') }}
-          >
-            <div style={{ display: 'flex', alignItems: 'center', gap: 12 }}>
-              <Tag color={getCategoryColor('delegate')} style={{ margin: 0, fontSize: 16, padding: '4px 8px' }}>
-                👥 DELEGATE
-              </Tag>
-              <div>
-                <div style={{ fontWeight: 'bold', color: '#333' }}>Urgent, Not Important</div>
-                <div style={{ color: '#666', fontSize: 14 }}>Interruptions, some calls, some meetings</div>
-              </div>
-            </div>
-          </Card>
-
-          <Card
-            hoverable
-            onClick={() => handleCategorySelection('eliminate')}
-            style={{ cursor: 'pointer', borderColor: getCategoryColor('eliminate') }}
-          >
-            <div style={{ display: 'flex', alignItems: 'center', gap: 12 }}>
-              <Tag color={getCategoryColor('eliminate')} style={{ margin: 0, fontSize: 16, padding: '4px 8px' }}>
-                🗑️ ELIMINATE
-              </Tag>
-              <div>
-                <div style={{ fontWeight: 'bold', color: '#333' }}>Not Urgent, Not Important</div>
-                <div style={{ color: '#666', fontSize: 14 }}>Busywork, some emails, time wasters</div>
-              </div>
-            </div>
-          </Card>
+          {(['do', 'schedule', 'delegate', 'eliminate'] as EisenhowerCategory[]).map(category => {
+            const doStatus = getDoStatus();
+            const isDisabled = category === 'do' && doStatus.isAtLimit;
+            
+            return (
+              <Card
+                key={category}
+                hoverable={!isDisabled}
+                onClick={isDisabled ? undefined : () => handleCategorySelection(category)}
+                style={{ 
+                  cursor: isDisabled ? 'not-allowed' : 'pointer', 
+                  borderColor: getCategoryColor(category),
+                  opacity: isDisabled ? 0.5 : 1,
+                  backgroundColor: isDisabled ? '#f5f5f5' : 'white'
+                }}
+              >
+                <div style={{ display: 'flex', alignItems: 'center', gap: 12 }}>
+                  <Tag color={getCategoryColor(category)} style={{ margin: 0, fontSize: 16, padding: '4px 8px' }}>
+                    {category === 'do' && '🔥 DO'}
+                    {category === 'schedule' && '📅 SCHEDULE'}
+                    {category === 'delegate' && '👥 DELEGATE'}
+                    {category === 'eliminate' && '🗑️ ELIMINATE'}
+                  </Tag>
+                  <div style={{ flex: 1 }}>
+                    <div style={{ fontWeight: 'bold', color: isDisabled ? '#999' : '#333' }}>
+                      {category === 'do' && 'Urgent + Important'}
+                      {category === 'schedule' && 'Important, Not Urgent'}
+                      {category === 'delegate' && 'Urgent, Not Important'}
+                      {category === 'eliminate' && 'Not Urgent, Not Important'}
+                    </div>
+                    <div style={{ color: isDisabled ? '#ccc' : '#666', fontSize: 14 }}>
+                      {category === 'do' && 'Crises, emergencies, deadline-driven projects'}
+                      {category === 'schedule' && 'Prevention, planning, development, research'}
+                      {category === 'delegate' && 'Interruptions, some calls, some meetings'}
+                      {category === 'eliminate' && 'Busywork, some emails, time wasters'}
+                    </div>
+                  </div>
+                  {category === 'do' && (
+                    <div style={{ display: 'flex', alignItems: 'center', gap: 8 }}>
+                      <span style={{ 
+                        fontSize: 12, 
+                        color: doStatus.isAtLimit ? '#fa8c16' : '#52c41a',
+                        fontWeight: 'bold'
+                      }}>
+                        {doStatus.count}/3
+                      </span>
+                      {doStatus.isAtLimit && (
+                        <span style={{ 
+                          fontSize: 11, 
+                          color: '#fa8c16',
+                          backgroundColor: '#fff7e6',
+                          padding: '2px 6px',
+                          borderRadius: '4px',
+                          border: '1px solid #ffd591'
+                        }}>
+                          FULL
+                        </span>
+                      )}
+                    </div>
+                  )}
+                </div>
+              </Card>
+            );
+          })}
         </div>
 
         <div style={{ marginTop: 16, textAlign: 'center', color: '#999', fontSize: 12 }}>
