@@ -7,10 +7,13 @@ export interface Artifact {
   task: string;
 }
 
+export type EisenhowerCategory = 'do' | 'schedule' | 'delegate' | 'eliminate';
+
 export interface Todo {
   id: string;
   text: string;
   completed: boolean;
+  category: EisenhowerCategory;
 }
 
 export interface DayData {
@@ -62,19 +65,24 @@ export const useDailyData = () => {
       localStorage.removeItem('pomodoroTodos');
     }
     
-    // Migrate todos to add IDs if they don't have them
+    // Migrate todos to add IDs and categories if they don't have them
     let needsSave = false;
     Object.keys(data).forEach(dateKey => {
       if (data[dateKey].todos) {
         data[dateKey].todos = data[dateKey].todos.map((todo: any) => {
+          let updatedTodo = { ...todo };
+          
           if (!todo.id) {
             needsSave = true;
-            return {
-              ...todo,
-              id: `todo-${Date.now()}-${Math.random().toString(36).substr(2, 9)}`
-            };
+            updatedTodo.id = `todo-${Date.now()}-${Math.random().toString(36).substr(2, 9)}`;
           }
-          return todo;
+          
+          if (!todo.category) {
+            needsSave = true;
+            updatedTodo.category = 'do'; // Default to 'do' for existing todos
+          }
+          
+          return updatedTodo;
         });
       }
     });
@@ -128,12 +136,13 @@ export const useDailyData = () => {
     }));
   }, [selectedDate]);
 
-  const addTodo = useCallback((text: string) => {
+  const addTodo = useCallback((text: string, category: EisenhowerCategory = 'do') => {
     const today = getTodayKey();
     const newTodo: Todo = {
       id: `todo-${Date.now()}-${Math.random().toString(36).substr(2, 9)}`,
       text: text.trim(),
-      completed: false
+      completed: false,
+      category
     };
     
     setDailyData(prev => ({
@@ -196,6 +205,22 @@ export const useDailyData = () => {
     });
   }, [selectedDate]);
 
+  const updateTodoCategory = useCallback((index: number, category: EisenhowerCategory) => {
+    if (selectedDate !== getTodayKey()) return;
+    
+    const today = getTodayKey();
+    setDailyData(prev => ({
+      ...prev,
+      [today]: {
+        ...prev[today],
+        artifacts: prev[today]?.artifacts || [],
+        todos: (prev[today]?.todos || []).map((todo, i) => 
+          i === index ? { ...todo, category } : todo
+        )
+      }
+    }));
+  }, [selectedDate]);
+
   return {
     dailyData,
     setDailyData,
@@ -208,6 +233,7 @@ export const useDailyData = () => {
     toggleTodo,
     deleteTodo,
     reorderTodos,
+    updateTodoCategory,
     getTodayKey,
   };
 };

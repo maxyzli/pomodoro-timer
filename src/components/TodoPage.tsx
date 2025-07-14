@@ -1,19 +1,20 @@
 import React, { useState } from 'react';
-import { DatePicker, Input, Button, Popconfirm, Checkbox } from 'antd';
+import { DatePicker, Input, Button, Popconfirm, Checkbox, Select, Tag, Segmented, Modal, Card } from 'antd';
 import { PlusOutlined, DeleteOutlined, LeftOutlined, RightOutlined, MenuOutlined } from '@ant-design/icons';
 import dayjs from 'dayjs';
 import { StatsPageContainer } from '../styles/Layout.styles';
-import { Todo } from '../hooks/useDailyData';
+import { Todo, EisenhowerCategory } from '../hooks/useDailyData';
 
 interface TodoPageProps {
   selectedDate: string;
   todos: Todo[];
   getTodayKey: () => string;
   onDateChange: (date: string) => void;
-  onAddTodo: (text: string) => void;
+  onAddTodo: (text: string, category?: EisenhowerCategory) => void;
   onToggleTodo: (index: number) => void;
   onDeleteTodo: (index: number) => void;
   onReorderTodos: (startIndex: number, endIndex: number) => void;
+  onUpdateTodoCategory: (index: number, category: EisenhowerCategory) => void;
 }
 
 export const TodoPage: React.FC<TodoPageProps> = ({
@@ -24,17 +25,58 @@ export const TodoPage: React.FC<TodoPageProps> = ({
   onAddTodo,
   onToggleTodo,
   onDeleteTodo,
-  onReorderTodos
+  onReorderTodos,
+  onUpdateTodoCategory
 }) => {
   const [todoInput, setTodoInput] = useState('');
+  const [filterCategory, setFilterCategory] = useState<EisenhowerCategory | 'all'>('all');
   const [draggedIndex, setDraggedIndex] = useState<number | null>(null);
+  const [showCategoryModal, setShowCategoryModal] = useState(false);
+  const [pendingTodoText, setPendingTodoText] = useState('');
 
   const handleAddTodo = () => {
     if (todoInput.trim()) {
-      onAddTodo(todoInput);
+      setPendingTodoText(todoInput.trim());
+      setShowCategoryModal(true);
       setTodoInput('');
     }
   };
+
+  const handleCategorySelection = (category: EisenhowerCategory) => {
+    onAddTodo(pendingTodoText, category);
+    setShowCategoryModal(false);
+    setPendingTodoText('');
+  };
+
+  const handleCancelCategorySelection = () => {
+    setShowCategoryModal(false);
+    setTodoInput(pendingTodoText); // Restore the text
+    setPendingTodoText('');
+  };
+
+  const getCategoryColor = (category: EisenhowerCategory) => {
+    switch (category) {
+      case 'do': return '#ff4d4f'; // Red - Urgent & Important
+      case 'schedule': return '#1890ff'; // Blue - Important, Not Urgent
+      case 'delegate': return '#faad14'; // Orange - Urgent, Not Important
+      case 'eliminate': return '#52c41a'; // Green - Not Urgent, Not Important
+      default: return '#d9d9d9';
+    }
+  };
+
+  const getCategoryLabel = (category: EisenhowerCategory) => {
+    switch (category) {
+      case 'do': return 'Do (Urgent + Important)';
+      case 'schedule': return 'Schedule (Important)';
+      case 'delegate': return 'Delegate (Urgent)';
+      case 'eliminate': return 'Eliminate (Neither)';
+      default: return category;
+    }
+  };
+
+  const filteredTodos = filterCategory === 'all' 
+    ? todos 
+    : todos.filter(todo => todo.category === filterCategory);
 
   const handlePreviousDay = () => {
     const currentDate = dayjs(selectedDate);
@@ -114,7 +156,7 @@ export const TodoPage: React.FC<TodoPageProps> = ({
       </div>
       
       {isToday && (
-        <Input.Group compact>
+        <Input.Group compact style={{ marginBottom: 16 }}>
           <Input.TextArea
             style={{ width: 'calc(100% - 40px)' }}
             value={todoInput}
@@ -137,18 +179,68 @@ export const TodoPage: React.FC<TodoPageProps> = ({
           Viewing past todos (read-only)
         </div>
       )}
+
+      <div style={{ marginBottom: 16 }}>
+        <div style={{ marginBottom: 8, fontWeight: 500, color: '#666' }}>Filter by Category:</div>
+        <Segmented
+          value={filterCategory}
+          onChange={setFilterCategory}
+          options={[
+            { label: 'All', value: 'all' },
+            { 
+              label: (
+                <span>
+                  <Tag color={getCategoryColor('do')} style={{ margin: 0, marginRight: 4 }}>🔥</Tag>
+                  Do
+                </span>
+              ), 
+              value: 'do' 
+            },
+            { 
+              label: (
+                <span>
+                  <Tag color={getCategoryColor('schedule')} style={{ margin: 0, marginRight: 4 }}>📅</Tag>
+                  Schedule
+                </span>
+              ), 
+              value: 'schedule' 
+            },
+            { 
+              label: (
+                <span>
+                  <Tag color={getCategoryColor('delegate')} style={{ margin: 0, marginRight: 4 }}>👥</Tag>
+                  Delegate
+                </span>
+              ), 
+              value: 'delegate' 
+            },
+            { 
+              label: (
+                <span>
+                  <Tag color={getCategoryColor('eliminate')} style={{ margin: 0, marginRight: 4 }}>🗑️</Tag>
+                  Eliminate
+                </span>
+              ), 
+              value: 'eliminate' 
+            },
+          ]}
+          style={{ width: '100%' }}
+        />
+      </div>
       
       <div style={{ marginTop: 16 }}>
-        {todos.map((item, idx) => (
+        {filteredTodos.map((item) => {
+          const originalIndex = todos.findIndex(todo => todo.id === item.id);
+          return (
           <div
             key={item.id}
             draggable={isToday}
-            onDragStart={(e) => handleDragStart(e, idx)}
+            onDragStart={(e) => handleDragStart(e, originalIndex)}
             onDragOver={handleDragOver}
-            onDrop={(e) => handleDrop(e, idx)}
+            onDrop={(e) => handleDrop(e, originalIndex)}
             onDragEnd={handleDragEnd}
             style={{
-              backgroundColor: draggedIndex === idx ? '#f0f0f0' : 'white',
+              backgroundColor: draggedIndex === originalIndex ? '#f0f0f0' : 'white',
               border: '1px solid #d9d9d9',
               borderRadius: '6px',
               marginBottom: '8px',
@@ -161,7 +253,7 @@ export const TodoPage: React.FC<TodoPageProps> = ({
               WebkitUserSelect: 'none',
               MozUserSelect: 'none',
               msUserSelect: 'none',
-              opacity: draggedIndex === idx ? 0.5 : 1,
+              opacity: draggedIndex === originalIndex ? 0.5 : 1,
             }}
           >
             <div style={{ display: 'flex', alignItems: 'center', flex: 1 }}>
@@ -192,23 +284,51 @@ export const TodoPage: React.FC<TodoPageProps> = ({
                   <MenuOutlined />
                 </div>
               )}
-              <Checkbox 
-                checked={item.completed} 
-                onChange={() => onToggleTodo(idx)}
-                disabled={!isToday}
-              >
-                <span style={{ 
-                  textDecoration: item.completed ? 'line-through' : 'none', 
-                  color: item.completed ? '#aaa' : '#333' 
-                }}>
-                  {item.text}
-                </span>
-              </Checkbox>
+              <div style={{ flex: 1 }}>
+                <div style={{ display: 'flex', alignItems: 'center', marginBottom: 4 }}>
+                  <Checkbox 
+                    checked={item.completed} 
+                    onChange={() => onToggleTodo(originalIndex)}
+                    disabled={!isToday}
+                    style={{ marginRight: 8 }}
+                  />
+                  <span style={{ 
+                    textDecoration: item.completed ? 'line-through' : 'none', 
+                    color: item.completed ? '#aaa' : '#333',
+                    flex: 1
+                  }}>
+                    {item.text}
+                  </span>
+                </div>
+                <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between' }}>
+                  <Tag color={getCategoryColor(item.category)} style={{ margin: 0 }}>
+                    {item.category === 'do' && '🔥'} 
+                    {item.category === 'schedule' && '📅'} 
+                    {item.category === 'delegate' && '👥'} 
+                    {item.category === 'eliminate' && '🗑️'} 
+                    {getCategoryLabel(item.category)}
+                  </Tag>
+                  {isToday && (
+                    <Select
+                      value={item.category}
+                      onChange={(value) => onUpdateTodoCategory(originalIndex, value)}
+                      size="small"
+                      style={{ minWidth: 100 }}
+                      disabled={!isToday}
+                    >
+                      <Select.Option value="do">🔥 Do</Select.Option>
+                      <Select.Option value="schedule">📅 Schedule</Select.Option>
+                      <Select.Option value="delegate">👥 Delegate</Select.Option>
+                      <Select.Option value="eliminate">🗑️ Eliminate</Select.Option>
+                    </Select>
+                  )}
+                </div>
+              </div>
             </div>
             {isToday && (
               <Popconfirm
                 title="Delete this todo?"
-                onConfirm={() => onDeleteTodo(idx)}
+                onConfirm={() => onDeleteTodo(originalIndex)}
                 okText="Yes"
                 cancelText="No"
               >
@@ -216,8 +336,96 @@ export const TodoPage: React.FC<TodoPageProps> = ({
               </Popconfirm>
             )}
           </div>
-        ))}
+          );
+        })}
       </div>
+
+      <Modal
+        title="Categorize Your Todo"
+        open={showCategoryModal}
+        onCancel={handleCancelCategorySelection}
+        footer={null}
+        width={600}
+      >
+        <div style={{ marginBottom: 16 }}>
+          <div style={{ fontSize: 16, marginBottom: 12, color: '#333' }}>
+            <strong>Todo:</strong> "{pendingTodoText}"
+          </div>
+          <div style={{ color: '#666', marginBottom: 16 }}>
+            Choose how to categorize this task using the Eisenhower Matrix:
+          </div>
+        </div>
+
+        <div style={{ display: 'grid', gap: 12 }}>
+          <Card
+            hoverable
+            onClick={() => handleCategorySelection('do')}
+            style={{ cursor: 'pointer', borderColor: getCategoryColor('do') }}
+          >
+            <div style={{ display: 'flex', alignItems: 'center', gap: 12 }}>
+              <Tag color={getCategoryColor('do')} style={{ margin: 0, fontSize: 16, padding: '4px 8px' }}>
+                🔥 DO
+              </Tag>
+              <div>
+                <div style={{ fontWeight: 'bold', color: '#333' }}>Urgent + Important</div>
+                <div style={{ color: '#666', fontSize: 14 }}>Crises, emergencies, deadline-driven projects</div>
+              </div>
+            </div>
+          </Card>
+
+          <Card
+            hoverable
+            onClick={() => handleCategorySelection('schedule')}
+            style={{ cursor: 'pointer', borderColor: getCategoryColor('schedule') }}
+          >
+            <div style={{ display: 'flex', alignItems: 'center', gap: 12 }}>
+              <Tag color={getCategoryColor('schedule')} style={{ margin: 0, fontSize: 16, padding: '4px 8px' }}>
+                📅 SCHEDULE
+              </Tag>
+              <div>
+                <div style={{ fontWeight: 'bold', color: '#333' }}>Important, Not Urgent</div>
+                <div style={{ color: '#666', fontSize: 14 }}>Prevention, planning, development, research</div>
+              </div>
+            </div>
+          </Card>
+
+          <Card
+            hoverable
+            onClick={() => handleCategorySelection('delegate')}
+            style={{ cursor: 'pointer', borderColor: getCategoryColor('delegate') }}
+          >
+            <div style={{ display: 'flex', alignItems: 'center', gap: 12 }}>
+              <Tag color={getCategoryColor('delegate')} style={{ margin: 0, fontSize: 16, padding: '4px 8px' }}>
+                👥 DELEGATE
+              </Tag>
+              <div>
+                <div style={{ fontWeight: 'bold', color: '#333' }}>Urgent, Not Important</div>
+                <div style={{ color: '#666', fontSize: 14 }}>Interruptions, some calls, some meetings</div>
+              </div>
+            </div>
+          </Card>
+
+          <Card
+            hoverable
+            onClick={() => handleCategorySelection('eliminate')}
+            style={{ cursor: 'pointer', borderColor: getCategoryColor('eliminate') }}
+          >
+            <div style={{ display: 'flex', alignItems: 'center', gap: 12 }}>
+              <Tag color={getCategoryColor('eliminate')} style={{ margin: 0, fontSize: 16, padding: '4px 8px' }}>
+                🗑️ ELIMINATE
+              </Tag>
+              <div>
+                <div style={{ fontWeight: 'bold', color: '#333' }}>Not Urgent, Not Important</div>
+                <div style={{ color: '#666', fontSize: 14 }}>Busywork, some emails, time wasters</div>
+              </div>
+            </div>
+          </Card>
+        </div>
+
+        <div style={{ marginTop: 16, textAlign: 'center', color: '#999', fontSize: 12 }}>
+          Click a category to save your todo, or press Cancel to edit the text
+        </div>
+      </Modal>
     </StatsPageContainer>
   );
 };

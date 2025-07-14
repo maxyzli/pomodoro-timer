@@ -42,6 +42,7 @@ const App: React.FC = () => {
     toggleTodo,
     deleteTodo,
     reorderTodos,
+    updateTodoCategory,
     getTodayKey,
   } = useDailyData();
 
@@ -243,6 +244,7 @@ const App: React.FC = () => {
             onToggleTodo={toggleTodo}
             onDeleteTodo={deleteTodo}
             onReorderTodos={reorderTodos}
+            onUpdateTodoCategory={updateTodoCategory}
           />
         )}
         
