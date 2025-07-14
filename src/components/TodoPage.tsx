@@ -213,24 +213,22 @@ export const TodoPage: React.FC<TodoPageProps> = ({
         </div>
       </div>
       
-      {isToday && (
-        <Input.Group compact style={{ marginBottom: 16 }}>
-          <Input.TextArea
-            style={{ width: 'calc(100% - 40px)' }}
-            value={todoInput}
-            onChange={e => setTodoInput(e.target.value)}
-            onPressEnter={(e) => {
-              if (e.ctrlKey || e.metaKey) {
-                handleAddTodo();
-              }
-            }}
-            placeholder="Add a new todo... (Ctrl+Enter to add)"
-            rows={2}
-            autoSize={{ minRows: 1, maxRows: 4 }}
-          />
-          <Button type="primary" icon={<PlusOutlined />} onClick={handleAddTodo} />
-        </Input.Group>
-      )}
+      <Input.Group compact style={{ marginBottom: 16 }}>
+        <Input.TextArea
+          style={{ width: 'calc(100% - 40px)' }}
+          value={todoInput}
+          onChange={e => setTodoInput(e.target.value)}
+          onPressEnter={(e) => {
+            if (e.ctrlKey || e.metaKey) {
+              handleAddTodo();
+            }
+          }}
+          placeholder="Add a new todo... (Ctrl+Enter to add)"
+          rows={2}
+          autoSize={{ minRows: 1, maxRows: 4 }}
+        />
+        <Button type="primary" icon={<PlusOutlined />} onClick={handleAddTodo} />
+      </Input.Group>
       
       {!isToday && (
         <div style={{ color: '#666', textAlign: 'center', margin: '20px 0', fontStyle: 'italic' }}>

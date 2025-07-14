@@ -137,7 +137,6 @@ export const useDailyData = () => {
   }, [selectedDate]);
 
   const addTodo = useCallback((text: string, category: EisenhowerCategory = 'do') => {
-    const today = getTodayKey();
     const newTodo: Todo = {
       id: `todo-${Date.now()}-${Math.random().toString(36).substr(2, 9)}`,
       text: text.trim(),
@@ -147,13 +146,13 @@ export const useDailyData = () => {
     
     setDailyData(prev => ({
       ...prev,
-      [today]: {
-        ...prev[today],
-        artifacts: prev[today]?.artifacts || [],
-        todos: [newTodo, ...(prev[today]?.todos || [])]
+      [selectedDate]: {
+        ...prev[selectedDate],
+        artifacts: prev[selectedDate]?.artifacts || [],
+        todos: [newTodo, ...(prev[selectedDate]?.todos || [])]
       }
     }));
-  }, []);
+  }, [selectedDate]);
 
   const toggleTodo = useCallback((index: number) => {
     setDailyData(prev => ({
