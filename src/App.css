@@ -3,12 +3,13 @@
 
 /* Custom styles for the app layout */
 .app-root {
-  min-height: 100vh;
+  height: 100vh;
   width: 100vw;
   background: #b04a4a;
   display: flex;
   flex-direction: column;
   align-items: center;
+  overflow: hidden;
 }
 
 .app-header {
@@ -48,10 +49,11 @@
 .app-content {
   padding: 0;
   background: transparent;
-  min-height: calc(100vh - 120px);
+  flex: 1;
   display: flex;
   align-items: center;
   justify-content: center;
+  overflow: hidden;
 }
 
 .timer-card {

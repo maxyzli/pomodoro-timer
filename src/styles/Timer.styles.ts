@@ -4,7 +4,10 @@ export const TimerContainer = styled.div`
   display: flex;
   flex-direction: column;
   align-items: center;
-  margin-top: 32px;
+  justify-content: center;
+  flex: 1;
+  padding: 16px;
+  max-height: calc(100vh - 200px);
 `;
 
 export const ModeTabs = styled.div`

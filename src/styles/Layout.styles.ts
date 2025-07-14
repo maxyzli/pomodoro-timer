@@ -4,18 +4,28 @@ export const GlobalStyle = createGlobalStyle`
   body {
     font-family: 'Inter', -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
     background: #b04a4a;
-    min-height: 100vh;
+    height: 100vh;
+    overflow-x: hidden;
     color: #333;
+    margin: 0;
+    padding: 0;
+  }
+  
+  html {
+    height: 100%;
+    overflow-x: hidden;
   }
 `;
 
 export const AppLayout = styled.div`
-  min-height: 100vh;
+  height: 100vh;
   width: 100vw;
   background: #b04a4a;
   display: flex;
   flex-direction: column;
   align-items: center;
+  overflow-y: auto;
+  overflow-x: hidden;
 `;
 
 export const AppHeader = styled.header`

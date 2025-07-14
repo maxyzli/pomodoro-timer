@@ -369,87 +369,97 @@ export const TodoPage: React.FC<TodoPageProps> = ({
                 </div>
               </div>
             </div>
-            {(
-              <Dropdown
-                menu={{
-                  items: [
-                    {
-                      key: 'status',
-                      label: 'Change status',
-                      children: [
-                        {
-                          key: 'status-do',
-                          label: '🔥 Do',
-                          onClick: () => onUpdateTodoCategory(originalIndex, 'do'),
-                        },
-                        {
-                          key: 'status-schedule',
-                          label: '📅 Schedule',
-                          onClick: () => onUpdateTodoCategory(originalIndex, 'schedule'),
-                        },
-                        {
-                          key: 'status-delegate',
-                          label: '👥 Delegate',
-                          onClick: () => onUpdateTodoCategory(originalIndex, 'delegate'),
-                        },
-                        {
-                          key: 'status-eliminate',
-                          label: '🗑️ Eliminate',
-                          onClick: () => onUpdateTodoCategory(originalIndex, 'eliminate'),
-                        },
-                      ],
-                    },
-                    {
-                      type: 'divider',
-                    },
-                    {
-                      key: 'move',
-                      label: 'Move to date...',
-                      icon: <CalendarOutlined />,
-                      onClick: () => handleMoveToDate(originalIndex),
-                    },
-                    {
-                      key: 'edit',
-                      label: 'Edit text',
-                      icon: <EditOutlined />,
-                      onClick: () => handleEditTodo(originalIndex),
-                    },
-                    {
-                      type: 'divider',
-                    },
-                    {
-                      key: 'delete',
-                      label: 'Delete',
-                      icon: <DeleteOutlined />,
-                      danger: true,
-                      onClick: () => {
-                        Modal.confirm({
-                          title: 'Delete this todo?',
-                          content: 'This action cannot be undone.',
-                          okText: 'Yes, delete',
-                          okType: 'danger',
-                          cancelText: 'Cancel',
-                          onOk: () => onDeleteTodo(originalIndex),
-                        });
+            {(() => {
+              // Check if changing to DO would exceed the limit
+              // Count ALL DO todos for the selected date (not just the filtered ones)
+              const allTodosForDate = todos; // This is already the todos for selectedDate
+              const currentDoCount = allTodosForDate.filter(todo => todo.category === 'do').length;
+              const isCurrentTodoDo = item.category === 'do';
+              const wouldExceedDoLimit = !isCurrentTodoDo && currentDoCount >= 3;
+
+              return (
+                <Dropdown
+                  menu={{
+                    items: [
+                      {
+                        key: 'status',
+                        label: 'Change status',
+                        children: [
+                          {
+                            key: 'status-do',
+                            label: wouldExceedDoLimit ? `🔥 Do (Full - ${currentDoCount}/3)` : '🔥 Do',
+                            onClick: wouldExceedDoLimit ? undefined : () => onUpdateTodoCategory(originalIndex, 'do'),
+                            disabled: wouldExceedDoLimit,
+                          },
+                          {
+                            key: 'status-schedule',
+                            label: '📅 Schedule',
+                            onClick: () => onUpdateTodoCategory(originalIndex, 'schedule'),
+                          },
+                          {
+                            key: 'status-delegate',
+                            label: '👥 Delegate',
+                            onClick: () => onUpdateTodoCategory(originalIndex, 'delegate'),
+                          },
+                          {
+                            key: 'status-eliminate',
+                            label: '🗑️ Eliminate',
+                            onClick: () => onUpdateTodoCategory(originalIndex, 'eliminate'),
+                          },
+                        ],
                       },
-                    },
-                  ],
-                }}
-                trigger={['click']}
-                placement="bottomRight"
-              >
-                <Button
-                  type="text"
-                  icon={<MoreOutlined />}
-                  size="small"
-                  style={{ 
-                    color: '#8c8c8c',
-                    transform: 'rotate(90deg)'
+                      {
+                        type: 'divider',
+                      },
+                      {
+                        key: 'move',
+                        label: 'Move to date...',
+                        icon: <CalendarOutlined />,
+                        onClick: () => handleMoveToDate(originalIndex),
+                      },
+                      {
+                        key: 'edit',
+                        label: 'Edit text',
+                        icon: <EditOutlined />,
+                        onClick: () => handleEditTodo(originalIndex),
+                      },
+                      {
+                        type: 'divider',
+                      },
+                      {
+                        key: 'delete',
+                        label: 'Delete',
+                        icon: <DeleteOutlined />,
+                        danger: true,
+                        onClick: () => {
+                          Modal.confirm({
+                            title: 'Delete this todo?',
+                            content: 'This action cannot be undone.',
+                            okText: 'Yes, delete',
+                            okType: 'danger',
+                            cancelText: 'Cancel',
+                            onOk: () => onDeleteTodo(originalIndex),
+                          });
+                        },
+                      },
+                    ],
                   }}
-                  onClick={(e) => e.stopPropagation()}
-                />
-              </Dropdown>
-            )}
+                  trigger={['click']}
+                  placement="bottomRight"
+                >
+                  <Button
+                    type="text"
+                    icon={<MoreOutlined />}
+                    size="small"
+                    style={{ 
+                      color: '#8c8c8c',
+                      transform: 'rotate(90deg)'
+                    }}
+                    onClick={(e) => e.stopPropagation()}
+                  />
+                </Dropdown>
+              );
+            })()}
           </div>
           );
         })}
