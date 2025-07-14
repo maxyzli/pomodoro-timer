@@ -92,6 +92,12 @@ export const TodoPage: React.FC<TodoPageProps> = ({
   const maxDoTodos = 3;
   const totalDoCount = todos.filter(todo => todo.category === 'do').length;
   
+  // Count todos by category
+  const getCategoryCount = (category: EisenhowerCategory | 'all') => {
+    if (category === 'all') return todos.length;
+    return todos.filter(todo => todo.category === category).length;
+  };
+  
 
   const getDoStatus = () => {
     return {
@@ -249,7 +255,7 @@ export const TodoPage: React.FC<TodoPageProps> = ({
               label: (
                 <span>
                   <Tag color={getCategoryColor('do')} style={{ margin: 0, marginRight: 4 }}>🔥</Tag>
-                  Do
+                  Do ({getCategoryCount('do')})
                 </span>
               ), 
               value: 'do' 
@@ -258,7 +264,7 @@ export const TodoPage: React.FC<TodoPageProps> = ({
               label: (
                 <span>
                   <Tag color={getCategoryColor('schedule')} style={{ margin: 0, marginRight: 4 }}>📅</Tag>
-                  Schedule
+                  Schedule ({getCategoryCount('schedule')})
                 </span>
               ), 
               value: 'schedule' 
@@ -267,7 +273,7 @@ export const TodoPage: React.FC<TodoPageProps> = ({
               label: (
                 <span>
                   <Tag color={getCategoryColor('delegate')} style={{ margin: 0, marginRight: 4 }}>👥</Tag>
-                  Delegate
+                  Delegate ({getCategoryCount('delegate')})
                 </span>
               ), 
               value: 'delegate' 
@@ -276,12 +282,12 @@ export const TodoPage: React.FC<TodoPageProps> = ({
               label: (
                 <span>
                   <Tag color={getCategoryColor('eliminate')} style={{ margin: 0, marginRight: 4 }}>🗑️</Tag>
-                  Eliminate
+                  Eliminate ({getCategoryCount('eliminate')})
                 </span>
               ), 
               value: 'eliminate' 
             },
-            { label: 'All', value: 'all' },
+            { label: `All (${getCategoryCount('all')})`, value: 'all' },
           ]}
           style={{ width: '100%' }}
         />
