@@ -234,7 +234,9 @@ export const TodoPage: React.FC<TodoPageProps> = ({
       
       {!isToday && (
         <div style={{ color: '#666', textAlign: 'center', margin: '20px 0', fontStyle: 'italic' }}>
-          Viewing past todos (read-only)
+          {dayjs(selectedDate).isBefore(dayjs(getTodayKey()), 'day') 
+            ? `Viewing todos from ${selectedDate}` 
+            : `Viewing future todos for ${selectedDate}`}
         </div>
       )}
 
@@ -293,7 +295,7 @@ export const TodoPage: React.FC<TodoPageProps> = ({
           return (
           <div
             key={item.id}
-            draggable={isToday}
+            draggable={true}
             onDragStart={(e) => handleDragStart(e, originalIndex)}
             onDragOver={handleDragOver}
             onDrop={(e) => handleDrop(e, originalIndex)}
@@ -307,7 +309,7 @@ export const TodoPage: React.FC<TodoPageProps> = ({
               display: 'flex',
               alignItems: 'center',
               justifyContent: 'space-between',
-              cursor: isToday ? 'grab' : 'default',
+              cursor: 'grab',
               userSelect: 'none',
               WebkitUserSelect: 'none',
               MozUserSelect: 'none',
@@ -316,53 +318,40 @@ export const TodoPage: React.FC<TodoPageProps> = ({
             }}
           >
             <div style={{ display: 'flex', alignItems: 'center', flex: 1 }}>
-              {isToday && (
-                <div
-                  style={{
-                    marginRight: '12px',
-                    color: '#8c8c8c',
-                    cursor: 'grab',
-                    padding: '4px',
-                    borderRadius: '4px',
-                    display: 'flex',
-                    alignItems: 'center',
-                    justifyContent: 'center',
-                    minWidth: '20px',
-                    height: '20px',
-                  }}
-                  onMouseEnter={(e) => {
-                    e.currentTarget.style.backgroundColor = '#f0f0f0';
-                    e.currentTarget.style.color = '#666';
-                  }}
-                  onMouseLeave={(e) => {
-                    e.currentTarget.style.backgroundColor = 'transparent';
-                    e.currentTarget.style.color = '#8c8c8c';
-                  }}
-                  title="Drag to reorder"
-                >
-                  <MenuOutlined />
-                </div>
-              )}
+              <div
+                style={{
+                  marginRight: '12px',
+                  color: '#8c8c8c',
+                  cursor: 'grab',
+                  padding: '4px',
+                  borderRadius: '4px',
+                  display: 'flex',
+                  alignItems: 'center',
+                  justifyContent: 'center',
+                  minWidth: '20px',
+                  height: '20px',
+                }}
+                onMouseEnter={(e) => {
+                  e.currentTarget.style.backgroundColor = '#f0f0f0';
+                  e.currentTarget.style.color = '#666';
+                }}
+                onMouseLeave={(e) => {
+                  e.currentTarget.style.backgroundColor = 'transparent';
+                  e.currentTarget.style.color = '#8c8c8c';
+                }}
+                title="Drag to reorder"
+              >
+                <MenuOutlined />
+              </div>
               <div style={{ flex: 1 }}>
                 <div style={{ display: 'flex', alignItems: 'center', marginBottom: 4 }}>
-                  <Tooltip 
-                    title={
-                      !isToday 
-                        ? "Past todos are read-only" 
-                        : ""
-                    }
-                    placement="top"
-                  >
-                    <Checkbox 
-                      checked={item.completed} 
-                      onChange={() => onToggleTodo(originalIndex)}
-                      disabled={!isToday}
-                      style={{ 
-                        marginRight: 8,
-                        opacity: !isToday ? 0.5 : 1
-                      }}
-                    />
-                  </Tooltip>
+                  <Checkbox 
+                    checked={item.completed} 
+                    onChange={() => onToggleTodo(originalIndex)}
+                    style={{ 
+                      marginRight: 8
+                    }}
+                  />
                   <span style={{ 
                     textDecoration: item.completed ? 'line-through' : 'none', 
                     color: item.completed ? '#aaa' : '#333',
@@ -382,7 +371,7 @@ export const TodoPage: React.FC<TodoPageProps> = ({
                 </div>
               </div>
             </div>
-            {isToday && (
+            {(
               <Dropdown
                 menu={{
                   items: [

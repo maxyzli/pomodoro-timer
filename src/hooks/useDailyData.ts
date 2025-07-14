@@ -156,15 +156,12 @@ export const useDailyData = () => {
   }, []);
 
   const toggleTodo = useCallback((index: number) => {
-    if (selectedDate !== getTodayKey()) return;
-    
-    const today = getTodayKey();
     setDailyData(prev => ({
       ...prev,
-      [today]: {
-        ...prev[today],
-        artifacts: prev[today]?.artifacts || [],
-        todos: (prev[today]?.todos || []).map((todo, i) => 
+      [selectedDate]: {
+        ...prev[selectedDate],
+        artifacts: prev[selectedDate]?.artifacts || [],
+        todos: (prev[selectedDate]?.todos || []).map((todo, i) => 
           i === index ? { ...todo, completed: !todo.completed } : todo
         )
       }
@@ -172,33 +169,27 @@ export const useDailyData = () => {
   }, [selectedDate]);
 
   const deleteTodo = useCallback((index: number) => {
-    if (selectedDate !== getTodayKey()) return;
-    
-    const today = getTodayKey();
     setDailyData(prev => ({
       ...prev,
-      [today]: {
-        ...prev[today],
-        artifacts: prev[today]?.artifacts || [],
-        todos: (prev[today]?.todos || []).filter((_, i) => i !== index)
+      [selectedDate]: {
+        ...prev[selectedDate],
+        artifacts: prev[selectedDate]?.artifacts || [],
+        todos: (prev[selectedDate]?.todos || []).filter((_, i) => i !== index)
       }
     }));
   }, [selectedDate]);
 
   const reorderTodos = useCallback((startIndex: number, endIndex: number) => {
-    if (selectedDate !== getTodayKey()) return;
-    
-    const today = getTodayKey();
     setDailyData(prev => {
-      const todos = [...(prev[today]?.todos || [])];
+      const todos = [...(prev[selectedDate]?.todos || [])];
       const [reorderedItem] = todos.splice(startIndex, 1);
       todos.splice(endIndex, 0, reorderedItem);
       
       return {
         ...prev,
-        [today]: {
-          ...prev[today],
-          artifacts: prev[today]?.artifacts || [],
+        [selectedDate]: {
+          ...prev[selectedDate],
+          artifacts: prev[selectedDate]?.artifacts || [],
           todos
         }
       };
@@ -206,15 +197,12 @@ export const useDailyData = () => {
   }, [selectedDate]);
 
   const updateTodoCategory = useCallback((index: number, category: EisenhowerCategory) => {
-    if (selectedDate !== getTodayKey()) return;
-    
-    const today = getTodayKey();
     setDailyData(prev => ({
       ...prev,
-      [today]: {
-        ...prev[today],
-        artifacts: prev[today]?.artifacts || [],
-        todos: (prev[today]?.todos || []).map((todo, i) => 
+      [selectedDate]: {
+        ...prev[selectedDate],
+        artifacts: prev[selectedDate]?.artifacts || [],
+        todos: (prev[selectedDate]?.todos || []).map((todo, i) => 
           i === index ? { ...todo, category } : todo
         )
       }
@@ -222,17 +210,14 @@ export const useDailyData = () => {
   }, [selectedDate]);
 
   const moveTodo = useCallback((index: number, targetDate: string) => {
-    if (selectedDate !== getTodayKey()) return;
-    
-    const today = getTodayKey();
     setDailyData(prev => {
-      const todayTodos = prev[today]?.todos || [];
-      const todoToMove = todayTodos[index];
+      const currentTodos = prev[selectedDate]?.todos || [];
+      const todoToMove = currentTodos[index];
       
       if (!todoToMove) return prev;
       
       // Remove from current date
-      const updatedTodayTodos = todayTodos.filter((_, i) => i !== index);
+      const updatedCurrentTodos = currentTodos.filter((_, i) => i !== index);
       
       // Add to target date
       const targetTodos = prev[targetDate]?.todos || [];
@@ -240,10 +225,10 @@ export const useDailyData = () => {
       
       return {
         ...prev,
-        [today]: {
-          ...prev[today],
-          artifacts: prev[today]?.artifacts || [],
-          todos: updatedTodayTodos
+        [selectedDate]: {
+          ...prev[selectedDate],
+          artifacts: prev[selectedDate]?.artifacts || [],
+          todos: updatedCurrentTodos
         },
         [targetDate]: {
           artifacts: prev[targetDate]?.artifacts || [],
@@ -254,15 +239,12 @@ export const useDailyData = () => {
   }, [selectedDate]);
 
   const editTodo = useCallback((index: number, newText: string) => {
-    if (selectedDate !== getTodayKey()) return;
-    
-    const today = getTodayKey();
     setDailyData(prev => ({
       ...prev,
-      [today]: {
-        ...prev[today],
-        artifacts: prev[today]?.artifacts || [],
-        todos: (prev[today]?.todos || []).map((todo, i) => 
+      [selectedDate]: {
+        ...prev[selectedDate],
+        artifacts: prev[selectedDate]?.artifacts || [],
+        todos: (prev[selectedDate]?.todos || []).map((todo, i) => 
           i === index ? { ...todo, text: newText } : todo
         )
       }
