@@ -33,7 +33,7 @@ export const TodoPage: React.FC<TodoPageProps> = ({
   onEditTodo
 }) => {
   const [todoInput, setTodoInput] = useState('');
-  const [filterCategory, setFilterCategory] = useState<EisenhowerCategory | 'all'>('all');
+  const [filterCategory, setFilterCategory] = useState<EisenhowerCategory | 'all'>('do');
   const [draggedIndex, setDraggedIndex] = useState<number | null>(null);
   const [showCategoryModal, setShowCategoryModal] = useState(false);
   const [pendingTodoText, setPendingTodoText] = useState('');
@@ -245,7 +245,6 @@ export const TodoPage: React.FC<TodoPageProps> = ({
           value={filterCategory}
           onChange={setFilterCategory}
           options={[
-            { label: 'All', value: 'all' },
             { 
               label: (
                 <span>
@@ -282,6 +281,7 @@ export const TodoPage: React.FC<TodoPageProps> = ({
               ), 
               value: 'eliminate' 
             },
+            { label: 'All', value: 'all' },
           ]}
           style={{ width: '100%' }}
         />
