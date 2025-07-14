@@ -25,6 +25,7 @@ const App: React.FC = () => {
   const [currentPage, setCurrentPage] = useState<Page>('timer');
   const [showFocusModal, setShowFocusModal] = useState(false);
   const [currentFocusTask, setCurrentFocusTask] = useState('');
+  const [currentFocusTodoId, setCurrentFocusTodoId] = useState<string | null>(null);
   const [showArtifactModal, setShowArtifactModal] = useState(false);
   const [artifactInput, setArtifactInput] = useState('');
   const [artifactVisibility, setArtifactVisibility] = useState(false);
@@ -104,14 +105,16 @@ const App: React.FC = () => {
     }
   };
 
-  const handleFocusStart = (focusTask: string) => {
+  const handleFocusStart = (focusTask: string, selectedTodoId?: string) => {
     setCurrentFocusTask(focusTask);
+    setCurrentFocusTodoId(selectedTodoId || null);
     setShowFocusModal(false);
     startTimer();
   };
 
   const handleTimerReset = () => {
     setCurrentFocusTask('');
+    setCurrentFocusTodoId(null);
     setShowFocusModal(false); // Ensure modal is closed on reset
     resetTimer();
   };
@@ -120,6 +123,7 @@ const App: React.FC = () => {
   const handleModeSwitch = (mode: string) => {
     if (mode !== 'work') {
       setCurrentFocusTask(''); // Clear focus task for breaks
+      setCurrentFocusTodoId(null);
     }
     switchMode(mode as any);
   };
@@ -152,9 +156,18 @@ const App: React.FC = () => {
       task: currentFocusTask,
     });
     
+    // Auto-complete the selected todo if one was chosen
+    if (currentFocusTodoId) {
+      const todoIndex = todos.findIndex(todo => todo.id === currentFocusTodoId);
+      if (todoIndex !== -1 && !todos[todoIndex].completed) {
+        toggleTodo(todoIndex);
+      }
+    }
+    
     setArtifactInput('');
     setArtifactVisibility(false);
     setShowArtifactModal(false);
+    setCurrentFocusTodoId(null);
     
     // Now handle auto-start break if enabled
     handlePostWorkSessionComplete();
@@ -167,6 +180,7 @@ const App: React.FC = () => {
     setArtifactInput('');
     setArtifactVisibility(false);
     setShowArtifactModal(false);
+    setCurrentFocusTodoId(null);
     
     // Handle auto-start break if enabled (even when canceling)
     handlePostWorkSessionComplete();
@@ -230,6 +244,7 @@ const App: React.FC = () => {
               isOpen={showFocusModal}
               onClose={handleModalClose}
               onStart={handleFocusStart}
+              todos={todos}
             />
           </div>
         )}
