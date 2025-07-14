@@ -1,6 +1,6 @@
 import React, { useState } from 'react';
-import { DatePicker, Input, Button, Popconfirm, Checkbox, Select, Tag, Segmented, Modal, Card, Tooltip } from 'antd';
-import { PlusOutlined, DeleteOutlined, LeftOutlined, RightOutlined, MenuOutlined } from '@ant-design/icons';
+import { DatePicker, Input, Button, Popconfirm, Checkbox, Select, Tag, Segmented, Modal, Card, Tooltip, Dropdown, MenuProps } from 'antd';
+import { PlusOutlined, DeleteOutlined, LeftOutlined, RightOutlined, MenuOutlined, MoreOutlined, CalendarOutlined, EditOutlined } from '@ant-design/icons';
 import dayjs from 'dayjs';
 import { StatsPageContainer } from '../styles/Layout.styles';
 import { Todo, EisenhowerCategory } from '../hooks/useDailyData';
@@ -15,6 +15,8 @@ interface TodoPageProps {
   onDeleteTodo: (index: number) => void;
   onReorderTodos: (startIndex: number, endIndex: number) => void;
   onUpdateTodoCategory: (index: number, category: EisenhowerCategory) => void;
+  onMoveTodo: (index: number, targetDate: string) => void;
+  onEditTodo: (index: number, newText: string) => void;
 }
 
 export const TodoPage: React.FC<TodoPageProps> = ({
@@ -26,13 +28,21 @@ export const TodoPage: React.FC<TodoPageProps> = ({
   onToggleTodo,
   onDeleteTodo,
   onReorderTodos,
-  onUpdateTodoCategory
+  onUpdateTodoCategory,
+  onMoveTodo,
+  onEditTodo
 }) => {
   const [todoInput, setTodoInput] = useState('');
   const [filterCategory, setFilterCategory] = useState<EisenhowerCategory | 'all'>('all');
   const [draggedIndex, setDraggedIndex] = useState<number | null>(null);
   const [showCategoryModal, setShowCategoryModal] = useState(false);
   const [pendingTodoText, setPendingTodoText] = useState('');
+  const [showMoveDateModal, setShowMoveDateModal] = useState(false);
+  const [movingTodoIndex, setMovingTodoIndex] = useState<number | null>(null);
+  const [selectedMoveDate, setSelectedMoveDate] = useState<dayjs.Dayjs | null>(null);
+  const [showEditModal, setShowEditModal] = useState(false);
+  const [editingTodoIndex, setEditingTodoIndex] = useState<number | null>(null);
+  const [editingTodoText, setEditingTodoText] = useState('');
 
   const handleAddTodo = () => {
     if (todoInput.trim()) {
@@ -132,6 +142,48 @@ export const TodoPage: React.FC<TodoPageProps> = ({
 
   const handleDragEnd = () => {
     setDraggedIndex(null);
+  };
+
+  const handleMoveToDate = (todoIndex: number) => {
+    setMovingTodoIndex(todoIndex);
+    setSelectedMoveDate(null);
+    setShowMoveDateModal(true);
+  };
+
+  const handleConfirmMoveDate = () => {
+    if (selectedMoveDate && movingTodoIndex !== null) {
+      onMoveTodo(movingTodoIndex, selectedMoveDate.format('YYYY-MM-DD'));
+      setShowMoveDateModal(false);
+      setMovingTodoIndex(null);
+      setSelectedMoveDate(null);
+    }
+  };
+
+  const handleCancelMoveDate = () => {
+    setShowMoveDateModal(false);
+    setMovingTodoIndex(null);
+    setSelectedMoveDate(null);
+  };
+
+  const handleEditTodo = (todoIndex: number) => {
+    setEditingTodoIndex(todoIndex);
+    setEditingTodoText(todos[todoIndex].text);
+    setShowEditModal(true);
+  };
+
+  const handleConfirmEdit = () => {
+    if (editingTodoIndex !== null && editingTodoText.trim()) {
+      onEditTodo(editingTodoIndex, editingTodoText.trim());
+      setShowEditModal(false);
+      setEditingTodoIndex(null);
+      setEditingTodoText('');
+    }
+  };
+
+  const handleCancelEdit = () => {
+    setShowEditModal(false);
+    setEditingTodoIndex(null);
+    setEditingTodoText('');
   };
 
   return (
@@ -326,7 +378,7 @@ export const TodoPage: React.FC<TodoPageProps> = ({
                     {item.text}
                   </span>
                 </div>
-                <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between' }}>
+                <div style={{ display: 'flex', alignItems: 'center' }}>
                   <Tag color={getCategoryColor(item.category)} style={{ margin: 0 }}>
                     {item.category === 'do' && '🔥'} 
                     {item.category === 'schedule' && '📅'} 
@@ -334,32 +386,89 @@ export const TodoPage: React.FC<TodoPageProps> = ({
                     {item.category === 'eliminate' && '🗑️'} 
                     {getCategoryLabel(item.category)}
                   </Tag>
-                  {isToday && (
-                    <Select
-                      value={item.category}
-                      onChange={(value) => onUpdateTodoCategory(originalIndex, value)}
-                      size="small"
-                      style={{ minWidth: 100 }}
-                      disabled={!isToday}
-                    >
-                      <Select.Option value="do">🔥 Do</Select.Option>
-                      <Select.Option value="schedule">📅 Schedule</Select.Option>
-                      <Select.Option value="delegate">👥 Delegate</Select.Option>
-                      <Select.Option value="eliminate">🗑️ Eliminate</Select.Option>
-                    </Select>
-                  )}
                 </div>
               </div>
             </div>
             {isToday && (
-              <Popconfirm
-                title="Delete this todo?"
-                onConfirm={() => onDeleteTodo(originalIndex)}
-                okText="Yes"
-                cancelText="No"
+              <Dropdown
+                menu={{
+                  items: [
+                    {
+                      key: 'status',
+                      label: 'Change status',
+                      children: [
+                        {
+                          key: 'status-do',
+                          label: '🔥 Do',
+                          onClick: () => onUpdateTodoCategory(originalIndex, 'do'),
+                        },
+                        {
+                          key: 'status-schedule',
+                          label: '📅 Schedule',
+                          onClick: () => onUpdateTodoCategory(originalIndex, 'schedule'),
+                        },
+                        {
+                          key: 'status-delegate',
+                          label: '👥 Delegate',
+                          onClick: () => onUpdateTodoCategory(originalIndex, 'delegate'),
+                        },
+                        {
+                          key: 'status-eliminate',
+                          label: '🗑️ Eliminate',
+                          onClick: () => onUpdateTodoCategory(originalIndex, 'eliminate'),
+                        },
+                      ],
+                    },
+                    {
+                      type: 'divider',
+                    },
+                    {
+                      key: 'move',
+                      label: 'Move to date...',
+                      icon: <CalendarOutlined />,
+                      onClick: () => handleMoveToDate(originalIndex),
+                    },
+                    {
+                      key: 'edit',
+                      label: 'Edit text',
+                      icon: <EditOutlined />,
+                      onClick: () => handleEditTodo(originalIndex),
+                    },
+                    {
+                      type: 'divider',
+                    },
+                    {
+                      key: 'delete',
+                      label: 'Delete',
+                      icon: <DeleteOutlined />,
+                      danger: true,
+                      onClick: () => {
+                        Modal.confirm({
+                          title: 'Delete this todo?',
+                          content: 'This action cannot be undone.',
+                          okText: 'Yes, delete',
+                          okType: 'danger',
+                          cancelText: 'Cancel',
+                          onOk: () => onDeleteTodo(originalIndex),
+                        });
+                      },
+                    },
+                  ],
+                }}
+                trigger={['click']}
+                placement="bottomRight"
               >
-                <Button type="text" icon={<DeleteOutlined />} danger size="small" />
-              </Popconfirm>
+                <Button
+                  type="text"
+                  icon={<MoreOutlined />}
+                  size="small"
+                  style={{ 
+                    color: '#8c8c8c',
+                    transform: 'rotate(90deg)'
+                  }}
+                  onClick={(e) => e.stopPropagation()}
+                />
+              </Dropdown>
             )}
           </div>
           );
@@ -451,6 +560,79 @@ export const TodoPage: React.FC<TodoPageProps> = ({
 
         <div style={{ marginTop: 16, textAlign: 'center', color: '#999', fontSize: 12 }}>
           Click a category to save your todo, or press Cancel to edit the text
+        </div>
+      </Modal>
+
+      {/* Move to Date Modal */}
+      <Modal
+        title="Move Todo to Date"
+        open={showMoveDateModal}
+        onCancel={handleCancelMoveDate}
+        footer={[
+          <Button key="cancel" onClick={handleCancelMoveDate}>
+            Cancel
+          </Button>,
+          <Button
+            key="submit"
+            type="primary"
+            onClick={handleConfirmMoveDate}
+            disabled={!selectedMoveDate}
+          >
+            Move Todo
+          </Button>,
+        ]}
+      >
+        <div style={{ marginBottom: 16 }}>
+          {movingTodoIndex !== null && (
+            <div style={{ marginBottom: 12, color: '#666' }}>
+              <strong>Todo:</strong> "{todos[movingTodoIndex]?.text}"
+            </div>
+          )}
+          <div style={{ color: '#666', marginBottom: 12 }}>
+            Select the date to move this todo to:
+          </div>
+          <DatePicker
+            value={selectedMoveDate}
+            onChange={setSelectedMoveDate}
+            placeholder="Select target date"
+            format="YYYY-MM-DD"
+            style={{ width: '100%' }}
+            autoFocus
+          />
+        </div>
+      </Modal>
+
+      {/* Edit Todo Modal */}
+      <Modal
+        title="Edit Todo Text"
+        open={showEditModal}
+        onCancel={handleCancelEdit}
+        footer={[
+          <Button key="cancel" onClick={handleCancelEdit}>
+            Cancel
+          </Button>,
+          <Button
+            key="submit"
+            type="primary"
+            onClick={handleConfirmEdit}
+            disabled={!editingTodoText.trim()}
+          >
+            Save Changes
+          </Button>,
+        ]}
+      >
+        <div style={{ marginBottom: 16 }}>
+          <div style={{ color: '#666', marginBottom: 12 }}>
+            Edit your todo text:
+          </div>
+          <Input.TextArea
+            value={editingTodoText}
+            onChange={(e) => setEditingTodoText(e.target.value)}
+            placeholder="Enter todo text..."
+            rows={3}
+            autoFocus
+            autoSize={{ minRows: 2, maxRows: 6 }}
+          />
         </div>
       </Modal>
     </StatsPageContainer>

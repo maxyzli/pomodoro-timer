@@ -221,6 +221,54 @@ export const useDailyData = () => {
     }));
   }, [selectedDate]);
 
+  const moveTodo = useCallback((index: number, targetDate: string) => {
+    if (selectedDate !== getTodayKey()) return;
+    
+    const today = getTodayKey();
+    setDailyData(prev => {
+      const todayTodos = prev[today]?.todos || [];
+      const todoToMove = todayTodos[index];
+      
+      if (!todoToMove) return prev;
+      
+      // Remove from current date
+      const updatedTodayTodos = todayTodos.filter((_, i) => i !== index);
+      
+      // Add to target date
+      const targetTodos = prev[targetDate]?.todos || [];
+      const updatedTargetTodos = [todoToMove, ...targetTodos];
+      
+      return {
+        ...prev,
+        [today]: {
+          ...prev[today],
+          artifacts: prev[today]?.artifacts || [],
+          todos: updatedTodayTodos
+        },
+        [targetDate]: {
+          artifacts: prev[targetDate]?.artifacts || [],
+          todos: updatedTargetTodos
+        }
+      };
+    });
+  }, [selectedDate]);
+
+  const editTodo = useCallback((index: number, newText: string) => {
+    if (selectedDate !== getTodayKey()) return;
+    
+    const today = getTodayKey();
+    setDailyData(prev => ({
+      ...prev,
+      [today]: {
+        ...prev[today],
+        artifacts: prev[today]?.artifacts || [],
+        todos: (prev[today]?.todos || []).map((todo, i) => 
+          i === index ? { ...todo, text: newText } : todo
+        )
+      }
+    }));
+  }, [selectedDate]);
+
   return {
     dailyData,
     setDailyData,
@@ -234,6 +282,8 @@ export const useDailyData = () => {
     deleteTodo,
     reorderTodos,
     updateTodoCategory,
+    moveTodo,
+    editTodo,
     getTodayKey,
   };
 };
