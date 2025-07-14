@@ -110,16 +110,10 @@ export const TodoPage: React.FC<TodoPageProps> = ({
   const handleNextDay = () => {
     const currentDate = dayjs(selectedDate);
     const nextDate = currentDate.add(1, 'day');
-    const today = dayjs(getTodayKey());
-    
-    // Don't allow navigation beyond today
-    if (nextDate.isAfter(today)) return;
-    
     onDateChange(nextDate.format('YYYY-MM-DD'));
   };
 
   const isToday = selectedDate === getTodayKey();
-  const canGoNext = !dayjs(selectedDate).isSame(dayjs(getTodayKey()), 'day');
 
   const handleDragStart = (e: React.DragEvent, index: number) => {
     setDraggedIndex(index);
@@ -210,7 +204,6 @@ export const TodoPage: React.FC<TodoPageProps> = ({
           <Button 
             icon={<RightOutlined />} 
             onClick={handleNextDay}
-            disabled={!canGoNext}
             size="small"
             title="Next day"
           />
@@ -598,6 +591,7 @@ export const TodoPage: React.FC<TodoPageProps> = ({
             format="YYYY-MM-DD"
             style={{ width: '100%' }}
             autoFocus
+            disabledDate={(current) => false}
           />
         </div>
       </Modal>
