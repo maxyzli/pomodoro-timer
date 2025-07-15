@@ -3,7 +3,6 @@ import { useState, useEffect, useCallback } from 'react';
 export interface Artifact {
   text: string;
   timestamp: string;
-  visibility: boolean;
   task: string;
 }
 

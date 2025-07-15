@@ -1,6 +1,9 @@
 import React, { useState } from 'react';
-import { Card, Form, InputNumber, Switch, Space, Typography, Button, Row, Col, Divider, Upload } from 'antd';
-import { CloudDownloadOutlined, UploadOutlined } from '@ant-design/icons';
+import { Card, Form, InputNumber, Switch, Space, Typography, Button, Row, Col, Divider, Upload, Alert } from 'antd';
+import { CloudDownloadOutlined, UploadOutlined, UserOutlined, LogoutOutlined } from '@ant-design/icons';
+import { MigrationHelper } from './MigrationHelper';
+import { AuthModal } from './AuthModal';
+import { useAuth } from '../contexts/AuthContext';
 
 interface SettingsPageProps {
   settings: {
@@ -26,6 +29,8 @@ export const SettingsPage: React.FC<SettingsPageProps> = ({
   onBackupImport,
 }) => {
   const [formSettings, setFormSettings] = useState(settings);
+  const [showAuthModal, setShowAuthModal] = useState(false);
+  const { user, signOut } = useAuth();
 
   const handleChange = (key: string, value: any) => {
     const updated = {
@@ -38,6 +43,43 @@ export const SettingsPage: React.FC<SettingsPageProps> = ({
 
   return (
     <div style={{ padding: '24px', maxWidth: '800px', margin: '0 auto' }}>
+      {/* Authentication Section - Moved to top */}
+      <Card title="Account & Sync" style={{ marginBottom: 16 }}>
+        {user ? (
+          <Space direction="vertical" style={{ width: '100%' }}>
+            <Alert
+              message="Signed In"
+              description={`You are signed in as ${user.email}. Your data is being synced to the cloud.`}
+              type="success"
+              showIcon
+            />
+            <Button 
+              icon={<LogoutOutlined />}
+              onClick={signOut}
+              type="default"
+            >
+              Sign Out
+            </Button>
+          </Space>
+        ) : (
+          <Space direction="vertical" style={{ width: '100%' }}>
+            <Alert
+              message="Not Signed In"
+              description="Sign in to sync your data across devices and keep it backed up safely."
+              type="info"
+              showIcon
+            />
+            <Button 
+              icon={<UserOutlined />}
+              onClick={() => setShowAuthModal(true)}
+              type="primary"
+            >
+              Sign In
+            </Button>
+          </Space>
+        )}
+      </Card>
+
       <Card>
         {/* Remove Cancel/Save buttons */}
         <Row gutter={[24, 24]}>
@@ -169,6 +211,14 @@ export const SettingsPage: React.FC<SettingsPageProps> = ({
           </Col>
         </Row>
       </Card>
+
+      <MigrationHelper />
+
+      <AuthModal
+        visible={showAuthModal}
+        onClose={() => setShowAuthModal(false)}
+        onAuthenticated={() => setShowAuthModal(false)}
+      />
     </div>
   );
 }; 

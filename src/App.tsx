@@ -2,13 +2,14 @@ import React, { useEffect, useState } from 'react';
 import { Layout, Modal, Input, Checkbox } from 'antd';
 import { ClockCircleOutlined, SettingOutlined, BarChartOutlined, UnorderedListOutlined } from '@ant-design/icons';
 import { useTimer } from './hooks/useTimer';
-import { useDailyData } from './hooks/useDailyData';
+import { useSupabaseDailyData as useDailyData } from './hooks/useSupabaseDailyData';
 import { FocusModal } from './components/FocusModal';
 import { SettingsPage } from './components/SettingsPage';
 import { TimerPage } from './components/TimerPage';
 import { TodoPage } from './components/TodoPage';
 import { StatsPage } from './components/StatsPage';
 import { AppLayout } from './components/AppLayout';
+import { AuthProvider } from './contexts/AuthContext';
 import { exportBackup, importBackup } from './utils/backup';
 import type { Page } from './interfaces';
 
@@ -21,7 +22,7 @@ const NAV_ITEMS = [
   { key: 'settings', icon: <SettingOutlined />, label: 'Settings' },
 ];
 
-const App: React.FC = () => {
+const AppContent: React.FC = () => {
   const [currentPage, setCurrentPage] = useState<Page>('timer');
   const [showFocusModal, setShowFocusModal] = useState(false);
   const [currentFocusTask, setCurrentFocusTask] = useState('');
@@ -154,7 +155,6 @@ const App: React.FC = () => {
     // Save the artifact using the custom hook
     addArtifact({
       text: artifactInput.trim() || '(No artifact description)',
-      visibility: artifactVisibility,
       task: currentFocusTask,
     });
     
@@ -222,6 +222,7 @@ const App: React.FC = () => {
     });
   };
 
+  // Keep original nav items without auth controls
 
   return (
     <AppLayout
@@ -239,7 +240,7 @@ const App: React.FC = () => {
               onStartClick={handleStartClick}
               onPauseTimer={pauseTimer}
               onStartTimer={startTimer}
-              onResetTimer={handleTimerReset}
+              onResetTimer={resetTimer}
               onModeSwitch={handleModeSwitch}
             />
             <FocusModal
@@ -321,6 +322,14 @@ const App: React.FC = () => {
         </Modal>
       </Content>
     </AppLayout>
+  );
+};
+
+const App: React.FC = () => {
+  return (
+    <AuthProvider>
+      <AppContent />
+    </AuthProvider>
   );
 };
 
