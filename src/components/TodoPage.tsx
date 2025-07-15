@@ -88,9 +88,9 @@ export const TodoPage: React.FC<TodoPageProps> = ({
     ? todos 
     : todos.filter(todo => todo.category === filterCategory && !todo.completed);
 
-  // Only limit DO category to 3 todos total (completed or not)
+  // Only limit DO category to 3 uncompleted todos
   const maxDoTodos = 3;
-  const totalDoCount = todos.filter(todo => todo.category === 'do').length;
+  const totalDoCount = todos.filter(todo => todo.category === 'do' && !todo.completed).length;
   
   // Count todos by category - categories only count uncompleted todos, All counts everything
   const getCategoryCount = (category: EisenhowerCategory | 'all') => {
@@ -377,9 +377,9 @@ export const TodoPage: React.FC<TodoPageProps> = ({
             </div>
             {(() => {
               // Check if changing to DO would exceed the limit
-              // Count ALL DO todos for the selected date (not just the filtered ones)
+              // Count only uncompleted DO todos for the selected date
               const allTodosForDate = todos; // This is already the todos for selectedDate
-              const currentDoCount = allTodosForDate.filter(todo => todo.category === 'do').length;
+              const currentDoCount = allTodosForDate.filter(todo => todo.category === 'do' && !todo.completed).length;
               const isCurrentTodoDo = item.category === 'do';
               const wouldExceedDoLimit = !isCurrentTodoDo && currentDoCount >= 3;
 
