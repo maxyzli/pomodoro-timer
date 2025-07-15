@@ -4,17 +4,19 @@ import { TimerSettings } from '../types'
 
 export class SupabaseService {
   private userId: string | null = null
+  public client = supabase
 
   async initialize() {
     try {
+      console.log('Initializing Supabase service...')
       // Get current authenticated user
       const { data: { user } } = await supabase.auth.getUser()
       this.userId = user?.id || null
       
       if (this.userId) {
-        console.log('Supabase initialized with user:', user?.email)
+        console.log('Supabase initialized with user:', user?.email, 'User ID:', this.userId)
       } else {
-        console.log('No authenticated user - data will be stored locally until sign in')
+        console.log('No authenticated user - user ID is null')
       }
     } catch (error) {
       console.error('Error initializing Supabase:', error)
@@ -114,6 +116,13 @@ export class SupabaseService {
   }
 
   async saveTodo(todo: Todo, date: string): Promise<void> {
+    console.log('saveTodo called with:', { todo, date, userId: this.userId })
+    
+    if (!this.userId) {
+      console.error('No user ID available - user may not be authenticated')
+      throw new Error('User not authenticated')
+    }
+    
     const { error } = await supabase
       .from('todos')
       .insert({
@@ -129,6 +138,8 @@ export class SupabaseService {
       console.error('Error saving todo:', error)
       throw error
     }
+    
+    console.log('Todo saved successfully')
   }
 
   async updateTodo(todo: Todo, date: string): Promise<void> {

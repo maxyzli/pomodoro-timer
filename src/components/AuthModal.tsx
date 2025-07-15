@@ -8,10 +8,9 @@ const { Text } = Typography
 interface AuthModalProps {
   visible: boolean
   onClose: () => void
-  onAuthenticated: () => void
 }
 
-export const AuthModal: React.FC<AuthModalProps> = ({ visible, onClose, onAuthenticated }) => {
+export const AuthModal: React.FC<AuthModalProps> = ({ visible, onClose }) => {
   const [email, setEmail] = useState('')
   const [loading, setLoading] = useState(false)
   const [emailSent, setEmailSent] = useState(false)

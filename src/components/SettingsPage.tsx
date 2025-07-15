@@ -1,7 +1,6 @@
 import React, { useState } from 'react';
 import { Card, Form, InputNumber, Switch, Space, Typography, Button, Row, Col, Divider, Upload, Alert } from 'antd';
 import { CloudDownloadOutlined, UploadOutlined, UserOutlined, LogoutOutlined } from '@ant-design/icons';
-import { MigrationHelper } from './MigrationHelper';
 import { AuthModal } from './AuthModal';
 import { useAuth } from '../contexts/AuthContext';
 
@@ -212,12 +211,10 @@ export const SettingsPage: React.FC<SettingsPageProps> = ({
         </Row>
       </Card>
 
-      <MigrationHelper />
 
       <AuthModal
         visible={showAuthModal}
         onClose={() => setShowAuthModal(false)}
-        onAuthenticated={() => setShowAuthModal(false)}
       />
     </div>
   );

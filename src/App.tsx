@@ -2,7 +2,7 @@ import React, { useEffect, useState } from 'react';
 import { Layout, Modal, Input, Checkbox } from 'antd';
 import { ClockCircleOutlined, SettingOutlined, BarChartOutlined, UnorderedListOutlined } from '@ant-design/icons';
 import { useTimer } from './hooks/useTimer';
-import { useSupabaseDailyData as useDailyData } from './hooks/useSupabaseDailyData';
+import { useDailyData } from './hooks/useDailyData';
 import { FocusModal } from './components/FocusModal';
 import { SettingsPage } from './components/SettingsPage';
 import { TimerPage } from './components/TimerPage';
@@ -115,12 +115,12 @@ const AppContent: React.FC = () => {
     startTimer();
   };
 
-  const handleTimerReset = () => {
-    setCurrentFocusTask('');
-    setCurrentFocusTodoId(null);
-    setShowFocusModal(false); // Ensure modal is closed on reset
-    resetTimer();
-  };
+  // const handleTimerReset = () => {
+  //   setCurrentFocusTask('');
+  //   setCurrentFocusTodoId(null);
+  //   setShowFocusModal(false); // Ensure modal is closed on reset
+  //   resetTimer();
+  // };
 
   // Clear focus task when switching to break modes
   const handleModeSwitch = (mode: string) => {

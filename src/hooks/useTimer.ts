@@ -1,5 +1,6 @@
 import { useState, useEffect, useCallback, useRef } from 'react';
 import { TimerMode, TimerSettings, TimerState } from '../types';
+import { supabaseService } from '../services/supabaseService';
 
 const DEFAULT_SETTINGS: TimerSettings = {
   workTime: 25,
@@ -12,20 +13,10 @@ const DEFAULT_SETTINGS: TimerSettings = {
   notificationsEnabled: true,
 };
 
-const loadSettings = (): TimerSettings => {
-  const saved = localStorage.getItem('pomodoroSettings');
-  if (saved) {
-    return { ...DEFAULT_SETTINGS, ...JSON.parse(saved) };
-  }
-  return DEFAULT_SETTINGS;
-};
-
-const saveSettings = (settings: TimerSettings) => {
-  localStorage.setItem('pomodoroSettings', JSON.stringify(settings));
-};
 
 export const useTimer = (onWorkSessionComplete?: () => void) => {
-  const [settings, setSettings] = useState<TimerSettings>(loadSettings);
+  const [settings, setSettings] = useState<TimerSettings>(DEFAULT_SETTINGS);
+  const [settingsLoaded, setSettingsLoaded] = useState(false);
   const [state, setState] = useState<TimerState>({
     timeLeft: settings.workTime * 60,
     isRunning: false,
@@ -35,8 +26,8 @@ export const useTimer = (onWorkSessionComplete?: () => void) => {
     totalSessions: settings.longBreakInterval,
   });
 
-  const timerRef = useRef<number | null>(null);
-  const notificationIntervalRef = useRef<number | null>(null);
+  const timerRef = useRef<NodeJS.Timeout | null>(null);
+  const notificationIntervalRef = useRef<NodeJS.Timeout | null>(null);
 
   const getTimeForMode = useCallback((mode: TimerMode): number => {
     switch (mode) {
@@ -79,7 +70,7 @@ export const useTimer = (onWorkSessionComplete?: () => void) => {
     playSound();
     
     // Start repeating the sound every 3 seconds
-    notificationIntervalRef.current = setInterval(playSound, 3000);
+    notificationIntervalRef.current = setInterval(playSound, 3000) as NodeJS.Timeout;
   }, [settings.soundEnabled]);
 
   const stopNotification = useCallback(() => {
@@ -140,7 +131,7 @@ export const useTimer = (onWorkSessionComplete?: () => void) => {
       if (settings.autoStartPomodoros) {
         setTimeout(() => {
           setState(prev => ({ ...prev, isRunning: true }));
-        }, 1000);
+        }, 1000) as NodeJS.Timeout;
       }
     }
   }, [state.currentMode, state.completedSessions, settings.longBreakInterval, settings.autoStartBreaks, settings.autoStartPomodoros, getTimeForMode, playNotification, showNotification, onWorkSessionComplete]);
@@ -166,7 +157,7 @@ export const useTimer = (onWorkSessionComplete?: () => void) => {
         
         return { ...prev, timeLeft: newTimeLeft };
       });
-    }, 1000);
+    }, 1000) as NodeJS.Timeout;
   }, [state.isRunning, completeTimer]);
 
   const pauseTimer = useCallback(() => {
@@ -209,10 +200,15 @@ export const useTimer = (onWorkSessionComplete?: () => void) => {
     }
   }, [getTimeForMode]);
 
-  const updateSettings = useCallback((newSettings: Partial<TimerSettings>) => {
+  const updateSettings = useCallback(async (newSettings: Partial<TimerSettings>) => {
     const updatedSettings = { ...settings, ...newSettings };
     setSettings(updatedSettings);
-    saveSettings(updatedSettings);
+    
+    try {
+      await supabaseService.saveSettings(updatedSettings);
+    } catch (error) {
+      console.error('Error saving settings:', error);
+    }
     
     setState(prev => ({
       ...prev,
@@ -220,6 +216,25 @@ export const useTimer = (onWorkSessionComplete?: () => void) => {
       timeLeft: prev.isPaused ? prev.timeLeft : getTimeForMode(prev.currentMode),
     }));
   }, [settings, getTimeForMode]);
+
+  // Load settings from Supabase on mount
+  useEffect(() => {
+    const loadSettings = async () => {
+      try {
+        await supabaseService.initialize();
+        const savedSettings = await supabaseService.getSettings();
+        if (savedSettings) {
+          setSettings({ ...DEFAULT_SETTINGS, ...savedSettings });
+        }
+      } catch (error) {
+        console.error('Error loading settings:', error);
+      } finally {
+        setSettingsLoaded(true);
+      }
+    };
+    
+    loadSettings();
+  }, []);
 
   // Cleanup timer and notification on unmount
   useEffect(() => {
@@ -235,13 +250,13 @@ export const useTimer = (onWorkSessionComplete?: () => void) => {
 
   // Update timeLeft when settings change (but not when paused)
   useEffect(() => {
-    if (!state.isRunning && !state.isPaused) {
+    if (settingsLoaded && !state.isRunning && !state.isPaused) {
       setState(prev => ({
         ...prev,
         timeLeft: getTimeForMode(prev.currentMode),
       }));
     }
-  }, [settings, getTimeForMode, state.isRunning, state.isPaused]);
+  }, [settings, getTimeForMode, state.isRunning, state.isPaused, settingsLoaded]);
 
   const handlePostWorkSessionComplete = useCallback(() => {
     // Auto-start break if enabled (called after artifact modal is closed)
@@ -255,6 +270,7 @@ export const useTimer = (onWorkSessionComplete?: () => void) => {
   return {
     state,
     settings,
+    settingsLoaded,
     startTimer,
     pauseTimer,
     resetTimer,

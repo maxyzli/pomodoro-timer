@@ -1,5 +1,5 @@
 import React, { useState } from 'react';
-import { DatePicker, Input, Button, Popconfirm, Checkbox, Select, Tag, Segmented, Modal, Card, Tooltip, Dropdown, MenuProps } from 'antd';
+import { DatePicker, Input, Button, Checkbox, Tag, Segmented, Modal, Card, Dropdown } from 'antd';
 import { PlusOutlined, DeleteOutlined, LeftOutlined, RightOutlined, MenuOutlined, MoreOutlined, CalendarOutlined, EditOutlined } from '@ant-design/icons';
 import dayjs from 'dayjs';
 import { StatsPageContainer } from '../styles/Layout.styles';
@@ -594,7 +594,7 @@ export const TodoPage: React.FC<TodoPageProps> = ({
             format="YYYY-MM-DD"
             style={{ width: '100%' }}
             autoFocus
-            disabledDate={(current) => false}
+            disabledDate={() => false}
           />
         </div>
       </Modal>

@@ -39,8 +39,21 @@ export const AuthProvider: React.FC<AuthProviderProps> = ({ children }) => {
         setUser(session?.user ?? null)
         setLoading(false)
         
-        if (event === 'SIGNED_IN') {
-          console.log('User signed in:', session?.user?.email)
+        if (event === 'SIGNED_IN' && session?.user) {
+          console.log('User signed in:', session.user.email)
+          
+          // Create user record if it doesn't exist
+          const { error } = await supabase
+            .from('users')
+            .upsert({
+              id: session.user.id,
+              email: session.user.email,
+              created_at: new Date().toISOString()
+            })
+          
+          if (error) {
+            console.error('Error creating user record:', error)
+          }
         }
       }
     )
@@ -49,7 +62,25 @@ export const AuthProvider: React.FC<AuthProviderProps> = ({ children }) => {
   }, [])
 
   const signOut = async () => {
-    await supabase.auth.signOut()
+    try {
+      console.log('Attempting to sign out...')
+      const timeout = new Promise((_, reject) => 
+        setTimeout(() => reject(new Error('Timeout')), 5000)
+      )
+      
+      await Promise.race([
+        supabase.auth.signOut(),
+        timeout
+      ])
+      
+      console.log('Sign out successful')
+      window.location.reload()
+    } catch (error) {
+      console.error('Sign out error:', error)
+      // Force sign out by clearing local storage and reloading
+      localStorage.clear()
+      window.location.reload()
+    }
   }
 
   const value = {
