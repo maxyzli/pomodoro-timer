@@ -257,10 +257,15 @@ export class SupabaseService {
 
   // Get all daily data
   async getAllDailyData(): Promise<DailyData> {
+    console.log('📊 Fetching all daily data from Supabase...')
+    
     const [artifactsResponse, todosResponse] = await Promise.all([
       supabase.from('artifacts').select('*').order('date', { ascending: false }),
       supabase.from('todos').select('*').order('date', { ascending: false })
     ])
+
+    console.log('📊 Artifacts response:', artifactsResponse.data?.length || 0, 'items')
+    console.log('📊 Todos response:', todosResponse.data?.length || 0, 'items')
 
     if (artifactsResponse.error || todosResponse.error) {
       console.error('Error fetching daily data:', artifactsResponse.error || todosResponse.error)
@@ -294,6 +299,9 @@ export class SupabaseService {
       })
     })
 
+    console.log('📊 Processed daily data:', Object.keys(dailyData).length, 'dates')
+    console.log('📊 Daily data structure:', dailyData)
+    
     return dailyData
   }
 
