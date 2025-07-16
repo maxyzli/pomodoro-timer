@@ -148,23 +148,35 @@ export class SupabaseService {
     
     console.log('🔄 Attempting to insert:', insertData)
     
-    const { data, error } = await supabase
-      .from('todos')
-      .insert(insertData)
-
-    console.log('🔍 Insert response:', { data, error })
-
-    if (error) {
-      console.error('❌ Error saving todo:', error)
-      console.error('❌ Error details:', error.message, error.details, error.hint)
-      console.error('❌ Error code:', error.code)
-      throw error
-    }
-    
-    if (data) {
-      console.log('✅ Todo saved successfully:', data)
-    } else {
-      console.log('⚠️ Todo insert completed but no data returned (might be RLS issue)')
+    try {
+      // Add timeout to prevent hanging
+      const insertPromise = supabase
+        .from('todos')
+        .insert(insertData)
+      
+      const timeoutPromise = new Promise((_, reject) => 
+        setTimeout(() => reject(new Error('Insert timeout after 5 seconds')), 5000)
+      )
+      
+      const result = await Promise.race([insertPromise, timeoutPromise]) as { data: any, error: any }
+      const { data, error } = result
+      console.log('🔍 Insert response:', { data, error })
+      
+      if (error) {
+        console.error('❌ Error saving todo:', error)
+        console.error('❌ Error details:', error.message, error.details, error.hint)
+        console.error('❌ Error code:', error.code)
+        throw error
+      }
+      
+      if (data) {
+        console.log('✅ Todo saved successfully:', data)
+      } else {
+        console.log('⚠️ Todo insert completed but no data returned (might be RLS issue)')
+      }
+    } catch (timeoutError) {
+      console.error('❌ Insert operation timed out or failed:', timeoutError)
+      throw timeoutError
     }
   }
 
