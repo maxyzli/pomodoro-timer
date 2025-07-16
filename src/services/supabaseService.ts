@@ -137,26 +137,35 @@ export class SupabaseService {
       throw new Error('User not authenticated')
     }
     
+    const insertData = {
+      id: todo.id,
+      user_id: this.userId,
+      text: todo.text,
+      completed: todo.completed,
+      category: todo.category,
+      date
+    }
+    
+    console.log('🔄 Attempting to insert:', insertData)
+    
     const { data, error } = await supabase
       .from('todos')
-      .insert({
-        id: todo.id,
-        user_id: this.userId,
-        text: todo.text,
-        completed: todo.completed,
-        category: todo.category,
-        date
-      })
+      .insert(insertData)
+
+    console.log('🔍 Insert response:', { data, error })
 
     if (error) {
-      console.error('Error saving todo:', error)
-      console.error('Error details:', error.message, error.details, error.hint)
+      console.error('❌ Error saving todo:', error)
+      console.error('❌ Error details:', error.message, error.details, error.hint)
+      console.error('❌ Error code:', error.code)
       throw error
     }
     
-    console.log('Todo saved successfully:', data)
-    
-    console.log('Todo saved successfully')
+    if (data) {
+      console.log('✅ Todo saved successfully:', data)
+    } else {
+      console.log('⚠️ Todo insert completed but no data returned (might be RLS issue)')
+    }
   }
 
   async updateTodo(todo: Todo, date: string): Promise<void> {
