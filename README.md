@@ -2,15 +2,19 @@
 
 A beautiful, modern Pomodoro timer built with React and TypeScript. Stay focused and productive with this simple yet powerful timer application.
 
+🌐 **Live Demo**: [https://project-rho-one-58.vercel.app](https://project-rho-one-58.vercel.app)
+
 ## Features
 
 - ⏰ **25/5/15 Pomodoro Technique**: 25-minute work sessions, 5-minute short breaks, 15-minute long breaks
 - 🎯 **Session Tracking**: Visual progress bar and session counter
+- 📝 **Todo Management**: Add, organize, and track todos with Eisenhower Matrix categories
 - ⚙️ **Customizable Settings**: Adjust work time, break durations, and sessions before long break
 - 🔔 **Notifications**: Audio alerts and browser notifications when sessions complete
 - 📱 **Responsive Design**: Works perfectly on desktop and mobile devices
-- 💾 **Persistent Settings**: Your preferences are saved locally
-- 🎨 **Modern UI**: Clean, gradient design with smooth animations
+- ☁️ **Cloud Sync**: Sign in to sync your data across devices (powered by Supabase)
+- 📊 **Work Log**: Track your productivity and view session history
+- 🎨 **Modern UI**: Clean, gradient design with smooth animations using Ant Design
 - ⚛️ **React + TypeScript**: Built with modern React hooks and TypeScript for type safety
 
 ## Tech Stack
@@ -18,8 +22,10 @@ A beautiful, modern Pomodoro timer built with React and TypeScript. Stay focused
 - **React 18** - Modern React with hooks
 - **TypeScript** - Type-safe development
 - **Vite** - Fast build tool and dev server
-- **CSS Modules** - Scoped styling
-- **Local Storage** - Persistent settings
+- **Ant Design** - UI component library
+- **Styled Components** - CSS-in-JS styling
+- **Supabase** - Backend-as-a-Service for authentication and database
+- **Vercel** - Deployment and hosting platform
 
 ## Getting Started
 
@@ -52,11 +58,13 @@ The built files will be in the `dist` folder.
 
 ## How to Use
 
-1. **Open the Timer**: Start the dev server and open in your browser
-2. **Choose Mode**: Select between Work, Short Break, or Long Break
-3. **Start Timer**: Click the "Start" button to begin your session
-4. **Pause/Reset**: Use the pause and reset buttons as needed
-5. **Customize**: Adjust settings in the bottom section to match your preferences
+1. **Visit the App**: Go to [https://project-rho-one-58.vercel.app](https://project-rho-one-58.vercel.app)
+2. **Sign In (Optional)**: Create an account to sync your todos and settings across devices
+3. **Set Your Todos**: Use the Todo tab to add tasks organized by the Eisenhower Matrix
+4. **Choose Mode**: Select between Work, Short Break, or Long Break on the Timer tab
+5. **Start Focus Session**: Click "Start" and select a todo to focus on during work sessions
+6. **Track Progress**: View your productivity in the Work Log tab
+7. **Customize Settings**: Adjust timer durations and preferences in the Settings tab
 
 ## Pomodoro Technique
 

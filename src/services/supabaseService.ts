@@ -9,15 +9,33 @@ export class SupabaseService {
   async initialize() {
     try {
       console.log('Initializing Supabase service...')
-      // Get current authenticated user
-      const { data: { user } } = await supabase.auth.getUser()
-      this.userId = user?.id || null
       
-      if (this.userId) {
-        console.log('Supabase initialized with user:', user?.email, 'User ID:', this.userId)
-      } else {
-        console.log('No authenticated user - user ID is null')
-      }
+      // Add timeout to prevent hanging
+      const timeout = new Promise((_, reject) => 
+        setTimeout(() => reject(new Error('Initialization timeout')), 10000)
+      )
+      
+      const initPromise = (async () => {
+        // First try to get session
+        const { data: { session } } = await supabase.auth.getSession()
+        console.log('Current session:', session?.user?.email || 'No session')
+        
+        // Then get current authenticated user
+        const { data: { user } } = await supabase.auth.getUser()
+        console.log('Current user:', user?.email || 'No user')
+        
+        this.userId = user?.id || null
+        
+        if (this.userId) {
+          console.log('✅ Supabase initialized with user:', user?.email, 'User ID:', this.userId)
+        } else {
+          console.log('❌ No authenticated user - user ID is null')
+          console.log('Session exists:', !!session)
+          console.log('User exists:', !!user)
+        }
+      })()
+      
+      await Promise.race([initPromise, timeout])
     } catch (error) {
       console.error('Error initializing Supabase:', error)
       this.userId = null
@@ -116,11 +134,33 @@ export class SupabaseService {
   }
 
   async saveTodo(todo: Todo, date: string): Promise<void> {
-    console.log('saveTodo called with:', { todo, date, userId: this.userId })
+    console.log('🔵 saveTodo called with:', { todo, date, userId: this.userId })
     
     if (!this.userId) {
-      console.error('No user ID available - user may not be authenticated')
-      throw new Error('User not authenticated')
+      console.error('❌ No user ID available - user may not be authenticated')
+      console.log('🔍 Trying to re-initialize...')
+      await this.initialize()
+      
+      if (!this.userId) {
+        console.error('❌ Still no user ID after re-initialization')
+        console.log('🔄 Waiting for auth state to settle...')
+        
+        // Wait up to 3 seconds for auth state to update
+        const maxWaitTime = 3000
+        const checkInterval = 100
+        let waitTime = 0
+        
+        while (!this.userId && waitTime < maxWaitTime) {
+          await new Promise(resolve => setTimeout(resolve, checkInterval))
+          await this.initialize()
+          waitTime += checkInterval
+        }
+        
+        if (!this.userId) {
+          console.error('❌ Authentication timeout - user is not signed in')
+          throw new Error('User not authenticated')
+        }
+      }
     }
     
     const { error } = await supabase

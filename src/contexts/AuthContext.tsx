@@ -1,6 +1,7 @@
 import React, { createContext, useContext, useEffect, useState } from 'react'
 import { User } from '@supabase/supabase-js'
 import { supabase } from '../lib/supabase'
+import { supabaseService } from '../services/supabaseService'
 
 interface AuthContextType {
   user: User | null
@@ -27,8 +28,11 @@ export const AuthProvider: React.FC<AuthProviderProps> = ({ children }) => {
   const [loading, setLoading] = useState(true)
 
   useEffect(() => {
+    let isInitializing = false
+    
     // Get initial session
-    supabase.auth.getSession().then(({ data: { session } }) => {
+    supabase.auth.getSession().then(async ({ data: { session } }) => {
+      console.log('Initial session:', session?.user?.email || 'No session')
       setUser(session?.user ?? null)
       setLoading(false)
     })
@@ -36,8 +40,22 @@ export const AuthProvider: React.FC<AuthProviderProps> = ({ children }) => {
     // Listen for auth changes
     const { data: { subscription } } = supabase.auth.onAuthStateChange(
       async (event, session) => {
+        console.log('Auth state change:', event, session?.user?.email || 'No user')
         setUser(session?.user ?? null)
         setLoading(false)
+        
+        // Only re-initialize on sign in/out, not on every change
+        if ((event === 'SIGNED_IN' || event === 'SIGNED_OUT') && !isInitializing) {
+          isInitializing = true
+          console.log('🔄 Re-initializing supabase service due to:', event)
+          try {
+            await supabaseService.initialize()
+          } catch (error) {
+            console.error('Error initializing supabase service:', error)
+          } finally {
+            isInitializing = false
+          }
+        }
         
         if (event === 'SIGNED_IN' && session?.user) {
           console.log('User signed in:', session.user.email)

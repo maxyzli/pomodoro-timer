@@ -36,7 +36,6 @@ export const useDailyData = () => {
   useEffect(() => {
     const init = async () => {
       try {
-        await supabaseService.initialize()
         const data = await supabaseService.getAllDailyData()
         setDailyData(data)
       } catch (error) {
@@ -45,25 +44,6 @@ export const useDailyData = () => {
     }
 
     init()
-
-    // Listen for auth changes and re-initialize
-    const { data: { subscription } } = supabaseService.client.auth.onAuthStateChange(
-      async (event, session) => {
-        console.log('Auth state changed:', event, session?.user?.email)
-        await supabaseService.initialize()
-        
-        if (session?.user) {
-          try {
-            const data = await supabaseService.getAllDailyData()
-            setDailyData(data)
-          } catch (error) {
-            console.error('Error loading data after auth change:', error)
-          }
-        }
-      }
-    )
-
-    return () => subscription.unsubscribe()
   }, [])
 
 
