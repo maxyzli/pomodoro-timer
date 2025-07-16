@@ -28,8 +28,6 @@ export const AuthProvider: React.FC<AuthProviderProps> = ({ children }) => {
   const [loading, setLoading] = useState(true)
 
   useEffect(() => {
-    let isInitializing = false
-    
     // Get initial session
     supabase.auth.getSession().then(async ({ data: { session } }) => {
       console.log('Initial session:', session?.user?.email || 'No session')
@@ -49,19 +47,6 @@ export const AuthProvider: React.FC<AuthProviderProps> = ({ children }) => {
         
         // Immediately set user in service to prevent race condition
         supabaseService.setUser(session?.user?.id ?? null)
-        
-        // Only re-initialize on sign in/out, not on every change
-        if ((event === 'SIGNED_IN' || event === 'SIGNED_OUT') && !isInitializing) {
-          isInitializing = true
-          console.log('🔄 Re-initializing supabase service due to:', event)
-          try {
-            await supabaseService.initialize()
-          } catch (error) {
-            console.error('Error initializing supabase service:', error)
-          } finally {
-            isInitializing = false
-          }
-        }
         
         if (event === 'SIGNED_IN' && session?.user) {
           console.log('User signed in:', session.user.email)
