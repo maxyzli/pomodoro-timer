@@ -24,59 +24,26 @@ export interface DayData {
 export interface DailyData {
   [date: string]: DayData;
 }
-import { RealtimeChannel } from '@supabase/supabase-js'
-
-
 export const useDailyData = () => {
   const [dailyData, setDailyData] = useState<DailyData>({})
-  const [subscriptions, setSubscriptions] = useState<RealtimeChannel[]>([])
 
+  // Function to refresh data from server
+  const refreshData = useCallback(async () => {
+    try {
+      const data = await supabaseService.getAllDailyData()
+      setDailyData(data)
+    } catch (error) {
+      console.error('Error loading from Supabase:', error)
+    }
+  }, [])
 
   // Initialize and load data
   useEffect(() => {
-    const init = async () => {
-      try {
-        const data = await supabaseService.getAllDailyData()
-        setDailyData(data)
-      } catch (error) {
-        console.error('Error loading from Supabase:', error)
-      }
-    }
-
-    init()
-  }, [])
+    refreshData()
+  }, [refreshData])
 
 
-  // Subscribe to real-time updates for today's data
-  useEffect(() => {
-    const today = dayjs().format('YYYY-MM-DD')
-    
-    const artifactSub = supabaseService.subscribeToArtifacts(today, (artifacts) => {
-      setDailyData(prev => ({
-        ...prev,
-        [today]: {
-          ...prev[today],
-          artifacts
-        }
-      }))
-    })
-
-    const todoSub = supabaseService.subscribeTodos(today, (todos) => {
-      setDailyData(prev => ({
-        ...prev,
-        [today]: {
-          ...prev[today],
-          todos
-        }
-      }))
-    })
-
-    setSubscriptions([artifactSub, todoSub])
-
-    return () => {
-      subscriptions.forEach(sub => sub.unsubscribe())
-    }
-  }, [])
+  // Removed real-time subscriptions - using simple HTTP requests instead
 
   // Get data for a specific date
   const getDayData = useCallback((date: string): DayData => {
@@ -166,11 +133,13 @@ export const useDailyData = () => {
       console.log('Attempting to save todo to Supabase...')
       await supabaseService.saveTodo(newTodo, today)
       console.log('Todo saved successfully to Supabase')
+      // Refresh data after successful save
+      await refreshData()
     } catch (error) {
       console.error('Error saving todo:', error)
       throw error
     }
-  }, [])
+  }, [refreshData])
 
   // Update todo
   const updateTodo = useCallback(async (date: string, todoId: string, updates: Partial<Todo>) => {
