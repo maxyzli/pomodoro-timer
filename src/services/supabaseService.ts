@@ -10,32 +10,23 @@ export class SupabaseService {
     try {
       console.log('Initializing Supabase service...')
       
-      // Add timeout to prevent hanging
-      const timeout = new Promise((_, reject) => 
-        setTimeout(() => reject(new Error('Initialization timeout')), 10000)
-      )
+      // First try to get session
+      const { data: { session } } = await supabase.auth.getSession()
+      console.log('Current session:', session?.user?.email || 'No session')
       
-      const initPromise = (async () => {
-        // First try to get session
-        const { data: { session } } = await supabase.auth.getSession()
-        console.log('Current session:', session?.user?.email || 'No session')
-        
-        // Then get current authenticated user
-        const { data: { user } } = await supabase.auth.getUser()
-        console.log('Current user:', user?.email || 'No user')
-        
-        this.userId = user?.id || null
-        
-        if (this.userId) {
-          console.log('✅ Supabase initialized with user:', user?.email, 'User ID:', this.userId)
-        } else {
-          console.log('❌ No authenticated user - user ID is null')
-          console.log('Session exists:', !!session)
-          console.log('User exists:', !!user)
-        }
-      })()
+      // Then get current authenticated user
+      const { data: { user } } = await supabase.auth.getUser()
+      console.log('Current user:', user?.email || 'No user')
       
-      await Promise.race([initPromise, timeout])
+      this.userId = user?.id || null
+      
+      if (this.userId) {
+        console.log('✅ Supabase initialized with user:', user?.email, 'User ID:', this.userId)
+      } else {
+        console.log('❌ No authenticated user - user ID is null')
+        console.log('Session exists:', !!session)
+        console.log('User exists:', !!user)
+      }
     } catch (error) {
       console.error('Error initializing Supabase:', error)
       this.userId = null
