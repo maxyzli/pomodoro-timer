@@ -6,6 +6,11 @@ export class SupabaseService {
   private userId: string | null = null
   public client = supabase
 
+  setUser(userId: string | null) {
+    this.userId = userId
+    console.log('🔄 SupabaseService user set to:', userId)
+  }
+
   async initialize() {
     try {
       console.log('Initializing Supabase service...')
@@ -129,29 +134,7 @@ export class SupabaseService {
     
     if (!this.userId) {
       console.error('❌ No user ID available - user may not be authenticated')
-      console.log('🔍 Trying to re-initialize...')
-      await this.initialize()
-      
-      if (!this.userId) {
-        console.error('❌ Still no user ID after re-initialization')
-        console.log('🔄 Waiting for auth state to settle...')
-        
-        // Wait up to 3 seconds for auth state to update
-        const maxWaitTime = 3000
-        const checkInterval = 100
-        let waitTime = 0
-        
-        while (!this.userId && waitTime < maxWaitTime) {
-          await new Promise(resolve => setTimeout(resolve, checkInterval))
-          await this.initialize()
-          waitTime += checkInterval
-        }
-        
-        if (!this.userId) {
-          console.error('❌ Authentication timeout - user is not signed in')
-          throw new Error('User not authenticated')
-        }
-      }
+      throw new Error('User not authenticated')
     }
     
     const { error } = await supabase

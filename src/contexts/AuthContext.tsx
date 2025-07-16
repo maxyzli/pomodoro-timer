@@ -35,6 +35,9 @@ export const AuthProvider: React.FC<AuthProviderProps> = ({ children }) => {
       console.log('Initial session:', session?.user?.email || 'No session')
       setUser(session?.user ?? null)
       setLoading(false)
+      
+      // Immediately set user in service to prevent race condition
+      supabaseService.setUser(session?.user?.id ?? null)
     })
 
     // Listen for auth changes
@@ -43,6 +46,9 @@ export const AuthProvider: React.FC<AuthProviderProps> = ({ children }) => {
         console.log('Auth state change:', event, session?.user?.email || 'No user')
         setUser(session?.user ?? null)
         setLoading(false)
+        
+        // Immediately set user in service to prevent race condition
+        supabaseService.setUser(session?.user?.id ?? null)
         
         // Only re-initialize on sign in/out, not on every change
         if ((event === 'SIGNED_IN' || event === 'SIGNED_OUT') && !isInitializing) {
