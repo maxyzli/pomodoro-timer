@@ -137,7 +137,7 @@ export class SupabaseService {
       throw new Error('User not authenticated')
     }
     
-    const { error } = await supabase
+    const { data, error } = await supabase
       .from('todos')
       .insert({
         id: todo.id,
@@ -150,8 +150,11 @@ export class SupabaseService {
 
     if (error) {
       console.error('Error saving todo:', error)
+      console.error('Error details:', error.message, error.details, error.hint)
       throw error
     }
+    
+    console.log('Todo saved successfully:', data)
     
     console.log('Todo saved successfully')
   }
