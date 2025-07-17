@@ -148,11 +148,18 @@ export class SupabaseService {
     
     console.log('🔄 Attempting to insert:', insertData)
     
+    // Check if auth.uid() matches our user_id
+    const { data: { user } } = await supabase.auth.getUser()
+    console.log('🔍 Current auth.uid():', user?.id)
+    console.log('🔍 Inserting user_id:', this.userId)
+    console.log('🔍 IDs match:', user?.id === this.userId)
+    
     try {
       // Add timeout to prevent hanging
       const insertPromise = supabase
         .from('todos')
         .insert(insertData)
+        .select()
       
       const timeoutPromise = new Promise((_, reject) => 
         setTimeout(() => reject(new Error('Insert timeout after 5 seconds')), 5000)
