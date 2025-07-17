@@ -148,15 +148,8 @@ export class SupabaseService {
     
     console.log('🔄 Attempting to insert:', insertData)
     
-    // Check if auth.uid() matches our user_id
-    try {
-      const { data: { user } } = await supabase.auth.getUser()
-      console.log('🔍 Current auth.uid():', user?.id)
-      console.log('🔍 Inserting user_id:', this.userId)
-      console.log('🔍 IDs match:', user?.id === this.userId)
-    } catch (authError) {
-      console.error('❌ Error getting user for auth check:', authError)
-    }
+    // Skip auth check for now - it's causing crashes
+    console.log('🔍 Inserting user_id:', this.userId)
     
     try {
       // Add timeout to prevent hanging

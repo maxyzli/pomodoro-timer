@@ -54,20 +54,31 @@ CREATE INDEX idx_todos_user_date ON todos(user_id, date);
 CREATE INDEX idx_artifacts_date ON artifacts(date);
 CREATE INDEX idx_todos_date ON todos(date);
 
+-- CRITICAL: Add user_id indexes for RLS performance (prevents timeouts)
+CREATE INDEX idx_artifacts_user_id ON artifacts USING btree (user_id);
+CREATE INDEX idx_todos_user_id ON todos USING btree (user_id);
+CREATE INDEX idx_settings_user_id ON settings USING btree (user_id);
+
 -- Row Level Security (RLS) policies
 ALTER TABLE artifacts ENABLE ROW LEVEL SECURITY;
 ALTER TABLE todos ENABLE ROW LEVEL SECURITY;
 ALTER TABLE settings ENABLE ROW LEVEL SECURITY;
 
--- Policies for authenticated users (magic link)
+-- Optimized policies for authenticated users (prevents timeouts)
 CREATE POLICY "Authenticated users can manage their own artifacts" ON artifacts
-  FOR ALL USING (auth.uid()::text = user_id::text);
+  FOR ALL 
+  TO authenticated
+  USING ((SELECT auth.uid()) = user_id);
 
 CREATE POLICY "Authenticated users can manage their own todos" ON todos
-  FOR ALL USING (auth.uid()::text = user_id::text);
+  FOR ALL 
+  TO authenticated
+  USING ((SELECT auth.uid()) = user_id);
 
 CREATE POLICY "Authenticated users can manage their own settings" ON settings
-  FOR ALL USING (auth.uid()::text = user_id::text);
+  FOR ALL 
+  TO authenticated
+  USING ((SELECT auth.uid()) = user_id);
 
 -- Updated_at trigger function
 CREATE OR REPLACE FUNCTION update_updated_at_column()
