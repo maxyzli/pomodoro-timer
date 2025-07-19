@@ -11,6 +11,7 @@ import { StatsPage } from './components/StatsPage';
 import { AppLayout } from './components/AppLayout';
 import { AuthProvider } from './contexts/AuthContext';
 import { exportBackup, importBackup } from './utils/backup';
+import { databaseInit } from './services/database-init';
 import type { Page } from './interfaces';
 
 const { Content } = Layout;
@@ -28,6 +29,8 @@ const AppContent: React.FC = () => {
   const [currentFocusTask, setCurrentFocusTask] = useState('');
   const [currentFocusTodoId, setCurrentFocusTodoId] = useState<string | null>(null);
   const [showArtifactModal, setShowArtifactModal] = useState(false);
+  const [dbInitialized, setDbInitialized] = useState(false);
+  const [dbError, setDbError] = useState<string | null>(null);
   const [artifactInput, setArtifactInput] = useState('');
   const [artifactVisibility, setArtifactVisibility] = useState(false);
 
@@ -84,6 +87,22 @@ const AppContent: React.FC = () => {
     handlePostWorkSessionComplete,
     stopNotification,
   } = useTimer(handleWorkSessionComplete);
+
+  // Initialize database on startup
+  useEffect(() => {
+    const initDb = async () => {
+      const result = await databaseInit.initialize();
+      if (result.success) {
+        setDbInitialized(true);
+        setDbError(null);
+      } else {
+        setDbError(result.message);
+        console.error('Database initialization failed:', result.message);
+      }
+    };
+    
+    initDb();
+  }, []);
 
   // Add useEffect to update document.title with timer status
   useEffect(() => {
@@ -229,6 +248,53 @@ const AppContent: React.FC = () => {
   };
 
   // Keep original nav items without auth controls
+
+  // Show database error if initialization failed
+  if (dbError) {
+    return (
+      <AppLayout
+        currentPage={currentPage}
+        onPageChange={setCurrentPage}
+        navItems={NAV_ITEMS}
+      >
+        <Content style={{ padding: '20px', maxWidth: '800px', margin: '0 auto' }}>
+          <div style={{ 
+            background: '#fff2f0', 
+            border: '1px solid #ffccc7', 
+            borderRadius: '6px', 
+            padding: '16px', 
+            margin: '20px 0'
+          }}>
+            <h3 style={{ color: '#cf1322', marginBottom: '8px' }}>Database Connection Error</h3>
+            <p style={{ marginBottom: '8px' }}>{dbError}</p>
+            <p style={{ fontSize: '14px', color: '#666' }}>
+              Please ensure your Supabase project is set up correctly:
+              <br />• Check that the database schema has been applied
+              <br />• Verify your environment variables are correct
+              <br />• Ensure RLS policies are properly configured
+            </p>
+          </div>
+        </Content>
+      </AppLayout>
+    );
+  }
+
+  // Show loading while initializing
+  if (!dbInitialized) {
+    return (
+      <AppLayout
+        currentPage={currentPage}
+        onPageChange={setCurrentPage}
+        navItems={NAV_ITEMS}
+      >
+        <Content style={{ padding: '20px', maxWidth: '800px', margin: '0 auto' }}>
+          <div style={{ textAlign: 'center', padding: '40px' }}>
+            <p>Initializing database connection...</p>
+          </div>
+        </Content>
+      </AppLayout>
+    );
+  }
 
   return (
     <AppLayout
