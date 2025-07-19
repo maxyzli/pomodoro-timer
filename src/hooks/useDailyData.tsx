@@ -8,9 +8,9 @@ import dayjs from 'dayjs';
 import { todosRepository } from '../repositories/todos.repository';
 import { artifactsRepository } from '../repositories/artifacts.repository';
 import { monitor } from '../core/monitoring';
-import { AppError } from '../core/errors';
+import { AppError, ErrorCode } from '../core/errors';
 import { useAuth } from '../contexts/auth/AuthContext';
-import { TodoInput, ArtifactInput } from '../validation/schemas';
+import { TodoInput } from '../validation/schemas';
 
 export interface Artifact {
   text: string;
@@ -135,7 +135,7 @@ export const useDailyData = (): UseDailyDataReturn => {
       });
     } catch (err) {
       const appError = err instanceof AppError ? err : new AppError(
-        'UNKNOWN_ERROR',
+        ErrorCode.UNKNOWN_ERROR,
         'Failed to load daily data',
         { module: 'useDailyData' },
         err
@@ -154,7 +154,7 @@ export const useDailyData = (): UseDailyDataReturn => {
 
   // Artifact operations
   const addArtifact = useCallback(async (artifact: Omit<Artifact, 'timestamp'>) => {
-    if (!user?.id) throw new AppError('AUTHENTICATION_REQUIRED', 'User not authenticated');
+    if (!user?.id) throw new AppError(ErrorCode.AUTHENTICATION_REQUIRED, 'User not authenticated');
 
     const today = getTodayKey();
     const fullArtifact: Artifact = {
@@ -188,7 +188,7 @@ export const useDailyData = (): UseDailyDataReturn => {
   }, [user?.id, getTodayKey, refreshData]);
 
   const deleteArtifact = useCallback(async (index: number) => {
-    if (!user?.id) throw new AppError('AUTHENTICATION_REQUIRED', 'User not authenticated');
+    if (!user?.id) throw new AppError(ErrorCode.AUTHENTICATION_REQUIRED, 'User not authenticated');
 
     const dayData = getDayData(selectedDate);
     const updatedArtifacts = dayData.artifacts.filter((_, i) => i !== index);
@@ -198,7 +198,7 @@ export const useDailyData = (): UseDailyDataReturn => {
   }, [user?.id, selectedDate, getDayData, refreshData]);
 
   const updateArtifacts = useCallback(async (date: string, artifacts: Artifact[]) => {
-    if (!user?.id) throw new AppError('AUTHENTICATION_REQUIRED', 'User not authenticated');
+    if (!user?.id) throw new AppError(ErrorCode.AUTHENTICATION_REQUIRED, 'User not authenticated');
 
     await artifactsRepository.replaceByDate(date, user.id, artifacts);
     await refreshData();
@@ -206,7 +206,7 @@ export const useDailyData = (): UseDailyDataReturn => {
 
   // Todo operations
   const addTodo = useCallback(async (text: string, category: EisenhowerCategory = 'do') => {
-    if (!user?.id) throw new AppError('AUTHENTICATION_REQUIRED', 'User not authenticated');
+    if (!user?.id) throw new AppError(ErrorCode.AUTHENTICATION_REQUIRED, 'User not authenticated');
 
     const today = getTodayKey();
     const todoInput: TodoInput = { text, category };
@@ -230,7 +230,7 @@ export const useDailyData = (): UseDailyDataReturn => {
     await refreshData();
   }, [selectedDate, getDayData, refreshData]);
 
-  const updateTodo = useCallback(async (date: string, todoId: string, updates: Partial<Todo>) => {
+  const updateTodo = useCallback(async (_date: string, todoId: string, updates: Partial<Todo>) => {
     await todosRepository.update(todoId, updates);
     await refreshData();
   }, [refreshData]);
@@ -272,7 +272,7 @@ export const useDailyData = (): UseDailyDataReturn => {
   }, [selectedDate, getDayData, updateTodo]);
 
   const moveTodo = useCallback(async (index: number, targetDate: string) => {
-    if (!user?.id) throw new AppError('AUTHENTICATION_REQUIRED', 'User not authenticated');
+    if (!user?.id) throw new AppError(ErrorCode.AUTHENTICATION_REQUIRED, 'User not authenticated');
 
     const dayData = getDayData(selectedDate);
     const todo = dayData.todos[index];
@@ -325,7 +325,7 @@ export const useDailyData = (): UseDailyDataReturn => {
   }, [dailyData]);
 
   const importData = useCallback(async (jsonData: string) => {
-    if (!user?.id) throw new AppError('AUTHENTICATION_REQUIRED', 'User not authenticated');
+    if (!user?.id) throw new AppError(ErrorCode.AUTHENTICATION_REQUIRED, 'User not authenticated');
 
     try {
       const parsed = JSON.parse(jsonData);
@@ -359,7 +359,7 @@ export const useDailyData = (): UseDailyDataReturn => {
       });
     } catch (err) {
       throw new AppError(
-        'VALIDATION_FAILED',
+        ErrorCode.VALIDATION_FAILED,
         'Invalid import data format',
         { module: 'useDailyData' },
         err as Error

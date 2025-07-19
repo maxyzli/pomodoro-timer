@@ -34,7 +34,6 @@ const AppContent: React.FC = () => {
   // Use the custom hook for data management
   const {
     dailyData,
-    setDailyData,
     selectedDate,
     setSelectedDate,
     getCurrentDayData,
@@ -218,11 +217,13 @@ const AppContent: React.FC = () => {
   };
 
   const handleBackupImport = (file: File) => {
-    return importBackup(file, (data, mode) => {
+    return importBackup(file, (data: any, mode: string) => {
       if (mode === 'merge') {
-        setDailyData(prev => ({ ...prev, ...data }));
+        console.log('Merge import:', data);
+        // TODO: Implement merge logic with new repository pattern
       } else {
-        setDailyData(data);
+        console.log('Replace import:', data);
+        // TODO: Implement replace logic with new repository pattern
       }
     });
   };
