@@ -70,7 +70,12 @@ const AppContent: React.FC = () => {
 
   // Use the updated useTimer hook
   const {
-    state,
+    timeLeft,
+    isRunning,
+    isPaused,
+    currentMode,
+    completedSessions,
+    totalSessions,
     settings,
     startTimer,
     pauseTimer,
@@ -89,17 +94,17 @@ const AppContent: React.FC = () => {
       return `${mins.toString().padStart(2, '0')}:${secs.toString().padStart(2, '0')}`;
     };
     
-    if (state.isRunning) {
-      document.title = `${formatTime(state.timeLeft)} - ${state.currentMode === 'work' ? 'Pomodoro' : state.currentMode === 'short-break' ? 'Short Break' : 'Long Break'} Timer`;
+    if (isRunning) {
+      document.title = `${formatTime(timeLeft)} - ${currentMode === 'work' ? 'Pomodoro' : currentMode === 'short-break' ? 'Short Break' : 'Long Break'} Timer`;
     } else {
       document.title = 'Pomodoro Timer';
     }
-  }, [state.isRunning, state.timeLeft, state.currentMode]);
+  }, [isRunning, timeLeft, currentMode]);
 
 
   const handleStartClick = () => {
-    if (!state.isRunning) {
-      if (state.currentMode === 'work') {
+    if (!isRunning) {
+      if (currentMode === 'work') {
         setShowFocusModal(true);
       } else {
         // For breaks, start timer directly without focus modal
@@ -234,7 +239,14 @@ const AppContent: React.FC = () => {
         {currentPage === 'timer' && (
           <div className="timer-main">
             <TimerPage
-              state={state}
+              state={{
+                timeLeft,
+                isRunning,
+                isPaused,
+                currentMode,
+                completedSessions,
+                totalSessions,
+              }}
               settings={settings}
               currentFocusTask={currentFocusTask}
               onStartClick={handleStartClick}
@@ -291,7 +303,7 @@ const AppContent: React.FC = () => {
         
         <Modal
           open={showArtifactModal}
-          title={`Congratulations! Session #${state.completedSessions + 1} complete`}
+          title={`Congratulations! Session #${completedSessions + 1} complete`}
           onOk={handleArtifactSave}
           onCancel={handleArtifactCancel}
           okText="Save"
